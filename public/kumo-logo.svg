@@ -1,28 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
-<title id="title">Kumo — Soluções em Tecnologia</title>
-<desc id="desc">Kumo, Soluções em Tecnologia</desc>
-<g fill="none" stroke="#173A73" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M600 115
-           C505 115 430 170 410 250
-           C375 226 332 212 285 212
-           C175 212 90 295 90 398
-           C90 501 175 584 285 584
-           C365 584 423 546 474 488
-           C522 433 557 385 600 345
-           C643 385 678 433 726 488
-           C777 546 835 584 915 584
-           C1025 584 1110 501 1110 398
-           C1110 295 1025 212 915 212
-           C868 212 825 226 790 250
-           C770 170 695 115 600 115 Z"/>
-  <path d="M600 345
-           C548 295 495 300 455 337
-           C420 370 420 421 455 454
-           C490 487 543 487 600 432
-           C657 487 710 487 745 454
-           C780 421 780 370 745 337
-           C705 300 652 295 600 345"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 544 472" role="img" aria-labelledby="title desc">
+<title id="title">Kumo Soluções em Tecnologia</title>
+<desc id="desc">Kumo Soluções em Tecnologia logo</desc>
+<g fill="none" stroke="#142541" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M178 79 C184 39 220 9 270 9 C319 9 352 38 365 78 C405 75 438 94 456 125 C474 157 473 191 456 219 C439 246 410 253 382 247 C360 243 342 232 328 220"/>
+  <path d="M176 103 C141 99 113 118 106 147 C99 176 112 203 137 215 C167 230 207 213 234 182"/>
+  <path d="M201 128 C194 100 204 70 229 51 C253 33 285 31 311 43 C329 51 339 65 343 82 C314 92 289 111 270 135"/>
+  <path d="M270 135 C293 105 321 89 350 84 C381 78 412 94 428 118 C447 147 441 180 424 202 C405 226 368 225 328 198"/>
+  <path d="M262 235 C279 227 290 215 298 202 C307 213 316 222 328 228"/>
 </g>
-<text x="600" y="680" text-anchor="middle" fill="#173A73" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="300" letter-spacing="-7">Kumo</text>
-<text x="600" y="750" text-anchor="middle" fill="#173A73" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="400" letter-spacing="2.5">SOLUÇÕES EM TECNOLOGIA</text>
+<text x="7" y="405" fill="#142541" font-family="Helvetica Neue, Arial, sans-serif" font-size="139" font-weight="300" letter-spacing="-6">Kumo</text>
+<text x="14" y="461" fill="#142541" font-family="Helvetica Neue, Arial, sans-serif" font-size="32" font-weight="300" letter-spacing="1.1">SOLUÇÕES EM TECNOLOGIA</text>
 </svg>
