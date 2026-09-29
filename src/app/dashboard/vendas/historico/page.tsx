@@ -1,0 +1,10 @@
+"use client";
+import {useEffect,useState} from "react";
+import {ArrowLeft,Search,ShoppingBag} from "lucide-react";
+type Sale={id:string;createdAt:string;total:number;payment:"pix"|"cash"|"debit"|"credit";customer:string};
+const money=(v:number)=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const labels={pix:"PIX",cash:"Dinheiro",debit:"Débito",credit:"Crédito"};
+export default function HistoricoPage(){const[sales,setSales]=useState<Sale[]>([]);const[query,setQuery]=useState("");
+useEffect(()=>{try{setSales(JSON.parse(localStorage.getItem("meucaixa-sales")||"[]"))}catch{setSales([])}},[]);
+const filtered=sales.filter(s=>s.id.toLowerCase().includes(query.toLowerCase())||s.customer.toLowerCase().includes(query.toLowerCase()));
+return <div className="page"><div className="page-header"><div><span className="eyebrow">VENDAS</span><h1>Histórico</h1><p>Consulte as vendas registradas neste dispositivo.</p></div><a className="button primary" href="/dashboard/vendas">Nova venda</a></div><div className="panel"><div className="history-toolbar"><a className="text-button back-link" href="/dashboard/vendas"><ArrowLeft size={16}/> Voltar ao PDV</a><div className="history-search"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar venda ou cliente"/></div></div>{!filtered.length?<div className="empty-history"><ShoppingBag size={42}/><strong>Nenhuma venda registrada</strong><span>As vendas feitas no PDV aparecerão aqui.</span></div>:<div className="table-wrap"><table><thead><tr><th>Venda</th><th>Data</th><th>Cliente</th><th>Pagamento</th><th>Total</th></tr></thead><tbody>{filtered.map(s=><tr key={s.id}><td><strong>{s.id}</strong></td><td>{new Date(s.createdAt).toLocaleString("pt-BR")}</td><td>{s.customer}</td><td><span className="status-pill">{labels[s.payment]}</span></td><td><strong>{money(s.total)}</strong></td></tr>)}</tbody></table></div>}</div></div>}
