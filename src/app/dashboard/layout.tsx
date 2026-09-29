@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <Link href="/dashboard" className="brand">Meu<span>Caixa</span></Link>
+      <Link href="/dashboard" className="brand"><img className="kumo-logo kumo-logo-sidebar" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" /><span className="meucaixa-brand-name">MeuCaixa</span></Link>
       <nav>
         <Link href="/dashboard">Visão geral</Link>
         <Link href="/dashboard/vendas">Vendas / PDV</Link>
