@@ -24,7 +24,7 @@ export default function LoginPage() {
   }
 
   return <main className="landing"><form className="landing-card" onSubmit={handleSubmit}>
-    <span className="eyebrow">MEUCAIXA</span>
+    <div className="kumo-login-brand"><img className="kumo-logo" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" /></div><span className="eyebrow">MEUCAIXA</span>
     <h1>Entrar</h1>
     <p>Acesse o painel da sua empresa.</p>
     <input className="field" type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} required />
