@@ -1,0 +1,15 @@
+"use client";
+import { useEffect,useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+export default function FinanceiroPage(){
+ const supabase=createClient(); const [rows,setRows]=useState<any[]>([]); const [type,setType]=useState("expense"); const [category,setCategory]=useState(""); const [description,setDescription]=useState(""); const [amount,setAmount]=useState(""); const [msg,setMsg]=useState("");
+ async function load(){const {data}=await supabase.from("financial_transactions").select("*").order("created_at",{ascending:false}).limit(50);setRows(data??[])}
+ useEffect(()=>{load()},[]);
+ async function add(e:any){e.preventDefault();const {data:org}=await supabase.rpc("get_my_organization");const id=org?.[0]?.organization_id;const {error}=await supabase.from("financial_transactions").insert({organization_id:id,type,category,description,amount:Number(amount)});if(error)setMsg(error.message);else{setCategory("");setDescription("");setAmount("");await load()}}
+ const income=rows.filter(r=>r.type==="income").reduce((n,r)=>n+Number(r.amount),0), expense=rows.filter(r=>r.type==="expense").reduce((n,r)=>n+Number(r.amount),0);
+ return <div className="page"><div className="page-header"><div><span className="eyebrow">FINANCEIRO</span><h1>Fluxo de caixa</h1><p>Registre receitas e despesas que não passam pelo PDV.</p></div></div>
+ <div className="stats-row"><div className="stat-card"><small>Receitas</small><strong>R$ {income.toFixed(2).replace(".",",")}</strong></div><div className="stat-card"><small>Despesas</small><strong>R$ {expense.toFixed(2).replace(".",",")}</strong></div><div className="stat-card"><small>Resultado</small><strong>R$ {(income-expense).toFixed(2).replace(".",",")}</strong></div></div>
+ <div className="panel"><h2>Nova movimentação</h2><form className="form-grid" onSubmit={add}><select className="field" value={type} onChange={e=>setType(e.target.value)}><option value="expense">Despesa</option><option value="income">Receita</option></select><input className="field" placeholder="Categoria" value={category} onChange={e=>setCategory(e.target.value)} required/><input className="field" placeholder="Descrição" value={description} onChange={e=>setDescription(e.target.value)} required/><input className="field" type="number" min=".01" step=".01" placeholder="Valor" value={amount} onChange={e=>setAmount(e.target.value)} required/><button className="button primary">Registrar</button></form>{msg&&<div className="error">{msg}</div>}</div>
+ <div className="panel"><h2>Últimas movimentações</h2><div className="table-wrap"><table><thead><tr><th>Descrição</th><th>Tipo</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.description}</td><td>{r.type==="income"?"Entrada":"Saída"}</td><td>{r.category}</td><td>R$ {Number(r.amount).toFixed(2).replace(".",",")}</td></tr>)}{!rows.length&&<tr><td colSpan={4}>Nenhuma movimentação registrada.</td></tr>}</tbody></table></div></div>
+ </div>;
+}
