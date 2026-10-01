@@ -4,6 +4,34 @@
 
 BEGIN;
 
+-- Compatibility: the live project may have the basic cash schema without
+-- the hardening columns from 0009-0011. Reports need these fields.
+ALTER TABLE public.cash_registers
+  ADD COLUMN IF NOT EXISTS terminal_number integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS terminal_name text NOT NULL DEFAULT 'Caixa 01',
+  ADD COLUMN IF NOT EXISTS terminal_identifier text,
+  ADD COLUMN IF NOT EXISTS expected_balance numeric(12,2),
+  ADD COLUMN IF NOT EXISTS counted_balance numeric(12,2),
+  ADD COLUMN IF NOT EXISTS difference numeric(12,2),
+  ADD COLUMN IF NOT EXISTS closing_observation text;
+
+ALTER TABLE public.cash_movements
+  ADD COLUMN IF NOT EXISTS direction smallint NOT NULL DEFAULT 1;
+
+UPDATE public.cash_movements
+SET direction = CASE
+  WHEN type IN ('cash_out', 'withdrawal') THEN -1
+  ELSE 1
+END
+WHERE direction IS NULL OR direction NOT IN (-1, 1);
+
+ALTER TABLE public.cash_movements
+  DROP CONSTRAINT IF EXISTS cash_movements_direction_check;
+
+ALTER TABLE public.cash_movements
+  ADD CONSTRAINT cash_movements_direction_check
+  CHECK (direction IN (-1, 1));
+
 -- ============================================================
 -- 1. ÍNDICES PARA CONSULTAS DE RELATÓRIOS
 -- ============================================================
