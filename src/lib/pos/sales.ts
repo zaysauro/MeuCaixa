@@ -182,7 +182,7 @@ export async function completePOSSale(params: {
       method: payment.method,
       amount: roundMoney(payment.amount),
     })),
-    p_customer_id: params.customer?.id ?? null,
+    p_customer_id: params.customer?.id ?? null,\n    p_seller_user_id: params.sellerUserId ?? null,
   });
 
   if (error) {
@@ -236,7 +236,7 @@ function mapSaleError(message: string): string {
     return "A soma dos pagamentos precisa ser exatamente igual ao total.";
   }
 
-  if (normalized.includes("invalid_customer")) {
+  if (normalized.includes("invalid_seller")) {\n    return "O vendedor selecionado não pertence a esta empresa.";\n  }\n\n  if (normalized.includes("duplicate_product_line")) {\n    return "O mesmo produto apareceu mais de uma vez na venda. Ajuste a quantidade em uma única linha.";\n  }\n\n  if (normalized.includes("invalid_customer")) {
     return "O cliente selecionado não pertence a esta empresa.";
   }
 
