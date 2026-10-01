@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CircleHelp, Settings } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -30,6 +31,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/dashboard/fornecedores">Fornecedores</Link>
           <Link href="/dashboard/relatorios">Relatórios</Link>
         </nav>
+
+        <div className="sidebar-tools">
+          <Link href="/dashboard/ajuda"><CircleHelp size={15} /> Ajuda</Link>
+          <Link href="/dashboard/configuracoes"><Settings size={15} /> Configurações</Link>
+        </div>
 
         <div className="sidebar-footer">
           <small>{org[0].organization_name}</small>
