@@ -6,7 +6,7 @@ const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "";
 
 export default function Home() {
   const whatsappHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Quero conhecer o MeuCaixa.")}`
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Olá! Quero contratar o MeuCaixa por R$ 59,90/mês.")}`
     : "#contato";
 
   return (
@@ -21,21 +21,28 @@ export default function Home() {
 
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">KUMO · MEUCAIXA</span>
-          <h1>Seu negócio no controle.<br /><span>Seu caixa sem complicação.</span></h1>
+          <span className="eyebrow">MEUCAIXA · KUMO</span>
+          <h1>Seu negócio organizado por apenas <span>R$ 59,90/mês.</span></h1>
           <p>
-            Vendas, caixa, estoque, produtos, clientes e financeiro em um único sistema,
-            feito para pequenos negócios.
+            PDV, vendas, estoque, caixa e financeiro em um só lugar.
+            Simples de usar, sem complicação e feito para pequenos negócios.
           </p>
+
+          <div className="hero-price">
+            <strong>R$ 59,90</strong>
+            <span>por mês · por empresa</span>
+          </div>
+
           <div className="hero-actions">
             <a href={whatsappHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} className="button primary">
-              <MessageCircle size={19} /> Falar pelo WhatsApp
+              <MessageCircle size={19} /> Quero contratar
             </a>
-            <a href={contactEmail ? `mailto:${contactEmail}?subject=Quero conhecer o MeuCaixa` : "#contato"} className="button secondary">
+            <a href={contactEmail ? `mailto:${contactEmail}?subject=Quero contratar o MeuCaixa` : "#contato"} className="button secondary">
               <Mail size={19} /> Falar por e-mail
             </a>
           </div>
-          <p className="hero-note">Sem cadastro automático. Nós configuramos sua conta e entregamos o acesso à sua empresa.</p>
+
+          <p className="hero-note">Um sistema completo para cuidar da operação do seu negócio sem pesar no bolso.</p>
         </div>
 
         <div className="hero-card">
@@ -54,10 +61,11 @@ export default function Home() {
 
       <section className="feature-section">
         <div className="section-heading">
-          <span className="eyebrow">TUDO EM UM SÓ LUGAR</span>
-          <h2>O básico do seu negócio, bem feito.</h2>
-          <p>Uma ferramenta direta para você vender e acompanhar sua operação sem depender de planilhas espalhadas.</p>
+          <span className="eyebrow">TUDO O QUE VOCÊ PRECISA</span>
+          <h2>Venda, controle e acompanhe seu negócio.</h2>
+          <p>Chega de planilhas espalhadas. Tenha as principais ferramentas da operação em um único sistema.</p>
         </div>
+
         <div className="feature-grid">
           <Feature icon={<Wallet />} title="PDV e vendas" text="Registre vendas, pagamentos, descontos e acompanhe o movimento do caixa." />
           <Feature icon={<Boxes />} title="Estoque" text="Produtos, categorias, entradas, saídas e alertas de estoque baixo." />
@@ -69,15 +77,17 @@ export default function Home() {
       <section className="pricing-section">
         <div className="pricing-card">
           <div>
-            <span className="eyebrow">PLANO MEUCAIXA</span>
-            <h2>Gestão completa por um preço simples.</h2>
-            <p>Sem complicar a contratação. Você fala com a Kumo, nós configuramos sua empresa e liberamos o acesso.</p>
+            <span className="eyebrow">PREÇO DIRETO</span>
+            <h2>Gestão completa sem mensalidade pesada.</h2>
+            <p>Você tem as ferramentas essenciais para operar sua empresa por um preço pensado para pequenos negócios.</p>
           </div>
+
           <div className="price">
-            <small>por mês</small>
+            <small>apenas</small>
             <strong><sup>R$</sup>59,90</strong>
-            <span>por empresa</span>
+            <span>por mês · por empresa</span>
           </div>
+
           <ul>
             <li><Check size={18} /> PDV e vendas</li>
             <li><Check size={18} /> Controle de estoque</li>
@@ -85,16 +95,17 @@ export default function Home() {
             <li><Check size={18} /> Clientes e fornecedores</li>
             <li><Check size={18} /> Usuários e permissões</li>
           </ul>
+
           <a href={whatsappHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} className="button primary pricing-button">
-            Quero contratar <ArrowRight size={18} />
+            Quero MeuCaixa por R$ 59,90 <ArrowRight size={18} />
           </a>
         </div>
       </section>
 
       <section className="contact-section" id="contato">
-        <span className="eyebrow">FALE COM A KUMO</span>
-        <h2>Quer colocar sua empresa para rodar?</h2>
-        <p>Entre em contato. Nós criamos o usuário da sua empresa, configuramos o acesso e orientamos os primeiros passos.</p>
+        <span className="eyebrow">COMECE AGORA</span>
+        <h2>Seu negócio pode ficar mais simples hoje.</h2>
+        <p>Fale com a Kumo, conheça o MeuCaixa e veja como colocar sua empresa para funcionar por R$ 59,90/mês.</p>
         <div className="contact-actions">
           {whatsappNumber && <a href={whatsappHref} target="_blank" rel="noreferrer" className="contact-link"><MessageCircle size={20} /> WhatsApp</a>}
           {contactEmail && <a href={`mailto:${contactEmail}`} className="contact-link"><Mail size={20} /> {contactEmail}</a>}
