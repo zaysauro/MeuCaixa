@@ -683,3 +683,8 @@ select.field{appearance:auto}
   .report-list-row{display:grid}
   .report-list-row span{text-align:left;white-space:normal}
 }
+
+.report-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;color:#718078;font-size:10px}
+.report-pagination>div{display:flex;gap:7px}
+.report-pagination .button{padding:8px 11px;font-size:11px}
+@media(max-width:520px){.report-pagination{display:grid}.report-pagination>div{width:100%}.report-pagination .button{flex:1}}
