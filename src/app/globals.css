@@ -438,3 +438,69 @@ select.field{appearance:auto}
 
 .pos-seller-button{width:100%;display:block;text-align:left;border:1px solid #2c3831;background:#18201b;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-size:12px}
 .pos-seller-button:hover{border-color:#4dba76}
+
+
+/* ============================================================
+   Comprovante não fiscal — tela / impressão térmica
+   ============================================================ */
+.receipt-print{
+  box-sizing:border-box;
+  color:#111;
+  background:#fff;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  line-height:1.35;
+  text-align:left;
+}
+.receipt-width-80{width:80mm}
+.receipt-width-58{width:58mm}
+.receipt-header{text-align:center;display:grid;gap:2px;font-size:10px}
+.receipt-brand{font-weight:900;font-size:16px;letter-spacing:.04em}
+.receipt-copy-label{text-align:center;font-size:9px;font-weight:900;margin:6px 0}
+.receipt-cancelled{
+  text-align:center;
+  font-weight:900;
+  font-size:13px;
+  border:2px solid #111;
+  padding:5px 3px;
+}
+.receipt-items{display:grid;gap:8px}
+.receipt-item-name{font-weight:800;overflow-wrap:anywhere;word-break:break-word}
+.receipt-item-discount{font-size:9px;text-align:right}
+.receipt-section-title{font-weight:900;font-size:9px;margin:5px 0}
+.receipt-payment{display:grid;gap:1px}
+.receipt-footer{text-align:center;font-size:10px;margin-top:10px}
+.receipt-footer .receipt-muted{margin-top:4px}
+
+@media screen{
+  .receipt-print{
+    display:block;
+    width:min(100%,80mm);
+    margin:22px auto 0;
+    padding:12px;
+    border:1px dashed #cfd7d2;
+    box-shadow:0 12px 35px rgba(0,0,0,.07);
+  }
+  .receipt-width-58{width:min(100%,58mm)}
+}
+
+@media print{
+  @page{size:80mm auto;margin:0}
+  html,body{width:80mm;margin:0!important;padding:0!important}
+  body{background:#fff!important}
+  .receipt-print{
+    display:block!important;
+    width:80mm!important;
+    max-width:80mm!important;
+    margin:0!important;
+    padding:3mm!important;
+    border:0!important;
+    box-shadow:none!important;
+    font-size:10px;
+  }
+  .receipt-width-58{
+    width:58mm!important;
+    max-width:58mm!important;
+  }
+  .receipt-row{font-size:10px}
+  .receipt-brand{font-size:14px}
+}
