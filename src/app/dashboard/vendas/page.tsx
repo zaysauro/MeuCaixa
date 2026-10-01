@@ -7,7 +7,8 @@ import ProductSearch, { type ProductSearchHandle } from "./components/ProductSea
 import Cart from "./components/Cart";
 import SaleSummary from "./components/SaleSummary";
 import DiscountModal from "./components/DiscountModal";
-import CustomerModal from "./components/CustomerModal";\nimport SellerModal from "./components/SellerModal";
+import CustomerModal from "./components/CustomerModal";
+import SellerModal from "./components/SellerModal";
 import PaymentModal from "./components/PaymentModal";
 import SaleReceipt from "./components/SaleReceipt";
 import { usePOSShortcuts } from "./hooks/usePOSShortcuts";
@@ -31,7 +32,9 @@ export default function VendasPage() {
   const [branches, setBranches] = useState<POSBranch[]>([]);
   const [branchId, setBranchId] = useState(searchBranch || "");
   const [branchName, setBranchName] = useState("");
-  const [sellerName, setSellerName] = useState("Usuário atual");\n  const [seller, setSeller] = useState<POSSeller | null>(null);\n  const [sellerOpen, setSellerOpen] = useState(false);
+  const [sellerName, setSellerName] = useState("Usuário atual");
+  const [seller, setSeller] = useState<POSSeller | null>(null);
+  const [sellerOpen, setSellerOpen] = useState(false);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<POSCustomer | null>(null);
@@ -298,7 +301,8 @@ export default function VendasPage() {
         <span><b>F2</b> Buscar</span><span><b>F4</b> Cliente</span><span><b>F8</b> Desconto</span><span><b>F9</b> Pagamento</span><span><b>ESC</b> Voltar</span><span><b>ENTER</b> Confirmar</span>
       </div>
 
-      {sellerOpen && <SellerModal organizationId={organizationId} selectedId={seller?.user_id ?? null} onSelect={(selected) => { setSeller(selected); setSellerName(selected.full_name); }} onClose={() => setSellerOpen(false)} />}\n      {customerOpen && <CustomerModal organizationId={organizationId} selected={customer} onSelect={setCustomer} onClose={() => setCustomerOpen(false)} />}
+      {sellerOpen && <SellerModal organizationId={organizationId} selectedId={seller?.user_id ?? null} onSelect={(selected) => { setSeller(selected); setSellerName(selected.full_name); }} onClose={() => setSellerOpen(false)} />}
+      {customerOpen && <CustomerModal organizationId={organizationId} selected={customer} onSelect={setCustomer} onClose={() => setCustomerOpen(false)} />}
       {globalDiscountOpen && <DiscountModal title="Desconto na venda" initialType="amount" initialValue={globalDiscount} maxAmount={Math.max(totals.subtotal - totals.itemDiscount, 0)} onClose={() => setGlobalDiscountOpen(false)} onConfirm={(type, value) => { setGlobalDiscount(type === "amount" ? value : (totals.subtotal - totals.itemDiscount) * value / 100); setGlobalDiscountOpen(false); }} />}
       {itemDiscount && <DiscountModal title={itemDiscount.product.name} initialType={itemDiscount.discountType} initialValue={itemDiscount.discountValue} maxAmount={itemDiscount.product.sale_price * itemDiscount.quantity} onClose={() => setItemDiscountId(null)} onConfirm={(type, value) => updateItemDiscount(itemDiscount.product.id, type, value)} />}
       {paymentOpen && <PaymentModal total={totals.total} onClose={() => setPaymentOpen(false)} onConfirm={handlePayment} />}
