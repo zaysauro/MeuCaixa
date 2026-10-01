@@ -21,6 +21,7 @@ export async function loadReports(params: {
   branchId: string | null;
   range: ReportRange;
   compare: boolean;
+  page?: number;
 }): Promise<{
   sales: SalesReport;
   products: ProductsReport;
@@ -40,7 +41,7 @@ export async function loadReports(params: {
       p_end: params.range.end,
       p_compare_start: compareStart,
       p_compare_end: compareEnd,
-      p_page: 1,
+      p_page: params.page ?? 1,
       p_page_size: 50,
     }),
     supabase.rpc("get_products_report", {
