@@ -5,7 +5,7 @@ import type { POSCustomer } from "@/lib/pos/types";
 
 type Props = {
   subtotal: number; discount: number; total: number; customer: POSCustomer | null; sellerName: string;
-  onCustomer: () => void; onDiscount: () => void;
+  onCustomer: () => void; onSeller: () => void; onDiscount: () => void;
 };
 const money = (value: number) => "R$ " + value.toFixed(2).replace(".", ",");
 
