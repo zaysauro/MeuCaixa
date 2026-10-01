@@ -554,8 +554,6 @@ BEGIN
       AND p.active = true
       AND ps.stock_quantity <= ps.minimum_stock
       AND ps.minimum_stock > 0
-    ORDER BY ps.stock_quantity ASC, p.name
-    LIMIT 200
   ),
   zero_stock AS (
     SELECT
@@ -571,8 +569,6 @@ BEGIN
       AND ps.branch_id IN (SELECT branch_id FROM allowed)
       AND p.active = true
       AND ps.stock_quantity <= 0
-    ORDER BY p.name
-    LIMIT 200
   ),
   no_sales AS (
     SELECT
@@ -637,12 +633,22 @@ BEGIN
 
     'low_stock', COALESCE((
       SELECT jsonb_agg(to_jsonb(x))
-      FROM low_stock x
+      FROM (
+        SELECT *
+        FROM low_stock
+        ORDER BY stock_quantity ASC, product_name
+        LIMIT 200
+      ) x
     ), '[]'::jsonb),
 
     'zero_stock', COALESCE((
       SELECT jsonb_agg(to_jsonb(x))
-      FROM zero_stock x
+      FROM (
+        SELECT *
+        FROM zero_stock
+        ORDER BY product_name
+        LIMIT 200
+      ) x
     ), '[]'::jsonb),
 
     'no_sales', COALESCE((
