@@ -182,6 +182,10 @@ export async function completePOSSale(params: {
     p_payments: params.payments.map((payment) => ({
       method: payment.method,
       amount: roundMoney(payment.amount),
+      received_amount:
+        payment.method === "cash" && payment.receivedAmount !== undefined
+          ? roundMoney(payment.receivedAmount)
+          : null,
     })),
     p_customer_id: params.customer?.id ?? null,
     p_seller_user_id: params.sellerUserId ?? null,
