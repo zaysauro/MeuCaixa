@@ -553,7 +553,6 @@ BEGIN
       AND ps.branch_id IN (SELECT branch_id FROM allowed)
       AND p.active = true
       AND ps.stock_quantity <= ps.minimum_stock
-      AND ps.minimum_stock > 0
   ),
   zero_stock AS (
     SELECT
@@ -1154,6 +1153,105 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_financial_report(uuid, uuid, timestamptz, timestamptz)
+TO authenticated;
+
+
+
+-- ============================================================
+-- 8. DASHBOARD: mesma definição de "hoje" dos relatórios.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.get_branch_dashboard_summary(
+  p_branch_id uuid DEFAULT NULL
+)
+RETURNS TABLE (
+  branch_id uuid,
+  branch_name text,
+  is_headquarters boolean,
+  sales_today numeric,
+  gross_profit_today numeric,
+  open_cash_count bigint,
+  stock_value numeric,
+  low_stock_count bigint
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $
+DECLARE
+  v_today_start timestamptz;
+  v_today_end timestamptz;
+BEGIN
+  v_today_start :=
+    date_trunc(
+      'day',
+      now() AT TIME ZONE 'America/Sao_Paulo'
+    ) AT TIME ZONE 'America/Sao_Paulo';
+
+  v_today_end := v_today_start + interval '1 day';
+
+  RETURN QUERY
+  SELECT
+    b.id,
+    b.name,
+    b.is_headquarters,
+
+    COALESCE((
+      SELECT sum(s.total)
+      FROM public.sales s
+      WHERE s.branch_id = b.id
+        AND s.status = 'completed'
+        AND s.created_at >= v_today_start
+        AND s.created_at < v_today_end
+    ), 0),
+
+    COALESCE((
+      SELECT sum(s.gross_profit)
+      FROM public.sales s
+      WHERE s.branch_id = b.id
+        AND s.status = 'completed'
+        AND s.created_at >= v_today_start
+        AND s.created_at < v_today_end
+    ), 0),
+
+    (
+      SELECT count(*)
+      FROM public.cash_registers cr
+      WHERE cr.branch_id = b.id
+        AND cr.status = 'open'
+    ),
+
+    COALESCE((
+      SELECT sum(ps.stock_quantity * p.cost_price)
+      FROM public.branch_product_stock ps
+      JOIN public.products p ON p.id = ps.product_id
+      WHERE ps.branch_id = b.id
+        AND p.active = true
+    ), 0),
+
+    (
+      SELECT count(*)
+      FROM public.branch_product_stock ps
+      JOIN public.products p ON p.id = ps.product_id
+      WHERE ps.branch_id = b.id
+        AND p.active = true
+        AND ps.stock_quantity <= ps.minimum_stock
+    )
+
+  FROM public.branches b
+  WHERE b.active = true
+    AND (p_branch_id IS NULL OR b.id = p_branch_id)
+    AND EXISTS (
+      SELECT 1
+      FROM public.report_allowed_branches(p_organization_id := b.organization_id, p_branch_id := b.id)
+      WHERE report_allowed_branches.branch_id = b.id
+    )
+  ORDER BY b.is_headquarters DESC, b.created_at, b.name;
+END;
+$;
+
+GRANT EXECUTE ON FUNCTION public.get_branch_dashboard_summary(uuid)
 TO authenticated;
 
 NOTIFY pgrst, 'reload schema';
