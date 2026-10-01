@@ -30,6 +30,7 @@ export default function VendasPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const searchBranch = searchParams.get("branch");
+  const searchReceipt = searchParams.get("receipt");
   const searchRef = useRef<ProductSearchHandle>(null);
 
   const [organizationId, setOrganizationId] = useState("");
@@ -69,6 +70,48 @@ export default function VendasPage() {
   const [receiptActionLoading, setReceiptActionLoading] = useState(false);
 
   const totals = useMemo(() => getCartTotals(cart, globalDiscount), [cart, globalDiscount]);
+
+  const loadHistoricalReceipt = useCallback(async () => {
+    if (!searchReceipt) return;
+
+    setReceiptLoading(true);
+    setReceiptError("");
+    try {
+      const receiptData = await getSaleReceipt(searchReceipt);
+      setReceipt(receiptData);
+      setReceiptCopyLabel("ORIGINAL");
+      setCompleted({
+        saleId: receiptData.sale.id,
+        total: Number(receiptData.sale.total),
+        subtotal: Number(receiptData.sale.subtotal),
+        discount: Number(receiptData.sale.discount),
+        change: Number(
+          receiptData.payments.reduce(
+            (sum, payment) => sum + Number(payment.change_amount || 0),
+            0
+          )
+        ),
+        payments: receiptData.payments.map((payment) => ({
+          method: payment.method,
+          amount: Number(payment.amount),
+          receivedAmount:
+            payment.received_amount === null
+              ? undefined
+              : Number(payment.received_amount),
+        })),
+      });
+    } catch (err) {
+      setReceiptError(
+        err instanceof Error ? err.message : "Não foi possível carregar o comprovante."
+      );
+    } finally {
+      setReceiptLoading(false);
+    }
+  }, [searchReceipt]);
+
+  useEffect(() => {
+    void loadHistoricalReceipt();
+  }, [loadHistoricalReceipt]);
 
   const loadPOS = useCallback(async () => {
     setLoading(true);
@@ -224,6 +267,9 @@ export default function VendasPage() {
     setReceiptCopyLabel("ORIGINAL");
     setReceiptActionLoading(false);
     setError("");
+    router.replace(
+      "/dashboard/vendas" + (branchId ? "?branch=" + encodeURIComponent(branchId) : "")
+    );
     window.setTimeout(() => searchRef.current?.focus(), 0);
   }
 
@@ -430,11 +476,25 @@ export default function VendasPage() {
           <h1>Vendas</h1>
           <p>PDV rápido para balcão, loja e caixa.</p>
         </div>
-        <div className="pos-branch-control">
+        <div className="pos-header-actions">
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() =>
+              router.push(
+                "/dashboard/vendas/historico" +
+                  (branchId ? "?branch=" + encodeURIComponent(branchId) : "")
+              )
+            }
+          >
+            Histórico
+          </button>
+          <div className="pos-branch-control">
           <Store size={17} />
           <select value={branchId} onChange={(event) => changeBranch(event.target.value)}>
             {branches.map((branch) => <option key={branch.branch_id} value={branch.branch_id}>{branch.branch_name}</option>)}
           </select>
+          </div>
         </div>
       </div>
 
