@@ -67,7 +67,9 @@ export type POSBranch = {
   role: string;
 };
 
-export type POSSeller = { user_id: string; full_name: string; role: string; };\n\nexport type POSOrganization = {
+export type POSSeller = { user_id: string; full_name: string; role: string; };
+
+export type POSOrganization = {
   organization_id: string;
   organization_name: string;
   branch_id: string | null;
