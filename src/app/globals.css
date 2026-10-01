@@ -435,3 +435,6 @@ select.field{appearance:auto}
   .pos-completed{padding:25px 17px}
   .pos-completed h1{font-size:34px}
 }
+
+.pos-seller-button{width:100%;display:block;text-align:left;border:1px solid #2c3831;background:#18201b;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-size:12px}
+.pos-seller-button:hover{border-color:#4dba76}
