@@ -165,6 +165,7 @@ export default function VendasPage() {
         items: cart,
         payments: pendingPayments,
         customer,
+        sellerUserId: seller?.user_id ?? null,
         globalDiscount,
       });
 
@@ -289,6 +290,7 @@ export default function VendasPage() {
             customer={customer}
             sellerName={sellerName}
             onCustomer={() => setCustomerOpen(true)}
+            onSeller={() => setSellerOpen(true)}
             onDiscount={() => setGlobalDiscountOpen(true)}
           />
           <button type="button" className="button primary pos-pay-button" disabled={!cart.length || saving} onClick={openPayment}>
