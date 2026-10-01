@@ -87,12 +87,19 @@ export default function VendasPage() {
       setBranchName(selected.branch_name);
 
       const user = userResult.data.user;
-      setSellerName(
+      const currentSellerName =
         user?.user_metadata?.full_name ||
         user?.user_metadata?.name ||
         user?.email ||
-        "Usuário atual"
-      );
+        "Usuário atual";
+      setSellerName(currentSellerName);
+      if (user?.id) {
+        setSeller({
+          user_id: user.id,
+          full_name: currentSellerName,
+          role: "current",
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível carregar o PDV.");
     } finally {
