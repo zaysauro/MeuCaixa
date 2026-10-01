@@ -299,7 +299,7 @@ export default function VendasPage() {
       </div>
 
       {customerOpen && <CustomerModal organizationId={organizationId} selected={customer} onSelect={setCustomer} onClose={() => setCustomerOpen(false)} />}
-      {globalDiscountOpen && <DiscountModal title="Desconto na venda" initialType={globalDiscount ? "amount" : "percent"} initialValue={globalDiscount} maxAmount={Math.max(totals.subtotal - totals.itemDiscount, 0)} onClose={() => setGlobalDiscountOpen(false)} onConfirm={(type, value) => { setGlobalDiscount(type === "amount" ? value : (totals.subtotal - totals.itemDiscount) * value / 100); setGlobalDiscountOpen(false); }} />}
+      {globalDiscountOpen && <DiscountModal title="Desconto na venda" initialType="amount" initialValue={globalDiscount} maxAmount={Math.max(totals.subtotal - totals.itemDiscount, 0)} onClose={() => setGlobalDiscountOpen(false)} onConfirm={(type, value) => { setGlobalDiscount(type === "amount" ? value : (totals.subtotal - totals.itemDiscount) * value / 100); setGlobalDiscountOpen(false); }} />}
       {itemDiscount && <DiscountModal title={itemDiscount.product.name} initialType={itemDiscount.discountType} initialValue={itemDiscount.discountValue} maxAmount={itemDiscount.product.sale_price * itemDiscount.quantity} onClose={() => setItemDiscountId(null)} onConfirm={(type, value) => updateItemDiscount(itemDiscount.product.id, type, value)} />}
       {paymentOpen && <PaymentModal total={totals.total} onClose={() => setPaymentOpen(false)} onConfirm={handlePayment} />}
 
