@@ -69,7 +69,7 @@ function Empty({ children = "Sem dados no período." }: { children?: React.React
   return <div className="report-empty">{children}</div>;
 }
 
-function SalesTab({ data, compare }: { data: any; compare: boolean }) {
+function SalesTab({ data, compare, page, onPageChange }: { data: any; compare: boolean; page: number; onPageChange: (page: number) => void }) {
   const revenueVariation = compare ? variation(data.summary.revenue, data.comparison.revenue) : null;
   const salesVariation = compare ? variation(data.summary.sales_count, data.comparison.sales_count) : null;
 
@@ -140,7 +140,13 @@ function SalesTab({ data, compare }: { data: any; compare: boolean }) {
                 </tbody>
               </table>
             </div>
-            <div className="report-table-note">Mostrando até 50 vendas. Total encontrado: {numberBR(data.total_rows)}.</div>
+            <div className="report-pagination">
+              <span>Página {page} · {numberBR(data.total_rows)} vendas encontradas</span>
+              <div>
+                <button className="button secondary" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>Anterior</button>
+                <button className="button secondary" disabled={page * 50 >= data.total_rows} onClick={() => onPageChange(page + 1)}>Próxima</button>
+              </div>
+            </div>
           </>
         ) : <Empty>Sem vendas no período.</Empty>}
       </Section>
@@ -317,6 +323,7 @@ export default function ReportsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState("vendas");
+  const [salesPage, setSalesPage] = useState(1);
 
   const period = (searchParams.get("period") as ReportPeriod) || "month";
   const branchParam = searchParams.get("branch") || "all";
@@ -359,16 +366,20 @@ export default function ReportsDashboard() {
   }, []);
 
   useEffect(() => {
+    setSalesPage(1);
+  }, [filters.branchId, filters.period, filters.from, filters.to, compare]);
+
+  useEffect(() => {
     if (!organizationId || !range) return;
     let active = true;
     setLoading(true);
     setError("");
-    loadReports({ organizationId, branchId: filters.branchId, range, compare })
+    loadReports({ organizationId, branchId: filters.branchId, range, compare, page: salesPage })
       .then((result) => { if (active) setData(result); })
       .catch((e) => { if (active) setError(e instanceof Error ? e.message : "Erro ao carregar relatórios."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [organizationId, filters.branchId, filters.period, filters.from, filters.to, compare, range?.start, range?.end]);
+  }, [organizationId, filters.branchId, filters.period, filters.from, filters.to, compare, range?.start, range?.end, salesPage]);
 
   const setFilter = (patch: Partial<ReportFilters>) => {
     const next = { ...filters, ...patch };
@@ -442,12 +453,20 @@ export default function ReportsDashboard() {
         <div className="report-actions">
           <button className="button secondary" onClick={exportCurrent} disabled={!data}><Download size={15} /> CSV</button>
           <button className="button secondary" onClick={() => window.print()}><Printer size={15} /> Imprimir / PDF</button>
-          <button className="button secondary" onClick={() => router.refresh()}><RefreshCw size={15} /> Atualizar</button>
+          <button className="button secondary" onClick={() => window.location.reload()}><RefreshCw size={15} /> Atualizar</button>
         </div>
       </div>
 
       <div className="report-filter-bar">
-        <label><span>Período</span><select value={filters.period} onChange={(e) => setFilter({ period: e.target.value as ReportPeriod })}>
+        <label><span>Período</span><select value={filters.period} onChange={(e) => {
+  const nextPeriod = e.target.value as ReportPeriod;
+  if (nextPeriod === "custom") {
+    const today = getTodayInput();
+    setFilter({ period: nextPeriod, from: from || today, to: to || today });
+  } else {
+    setFilter({ period: nextPeriod });
+  }
+}}>
           <option value="today">Hoje</option>
           <option value="yesterday">Ontem</option>
           <option value="week">Semana atual</option>
@@ -487,7 +506,7 @@ export default function ReportsDashboard() {
 
       {!loading && data && (
         <>
-          {tab === "vendas" && <SalesTab data={data.sales} compare={compare} />}
+          {tab === "vendas" && <SalesTab data={data.sales} compare={compare} page={salesPage} onPageChange={setSalesPage} />}
           {tab === "produtos" && <ProductsTab data={data.products} />}
           {tab === "caixa" && <CashTab data={data.cash} />}
           {tab === "filiais" && <BranchesTab data={data.branches} />}
