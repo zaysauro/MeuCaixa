@@ -146,3 +146,92 @@ select.field{appearance:auto}
   .product-edit-header,.products-list-header{display:grid}
   .product-actions{flex-wrap:wrap}
 }
+
+/* Matriz, filiais e visão consolidada */
+.branch-switcher {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 560px;
+}
+.branch-switcher-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 11px;
+  border: 1px solid #dfe5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #5f6b64;
+  font-size: 12px;
+  font-weight: 700;
+}
+.branch-switcher-item:hover,
+.branch-switcher-item.active {
+  border-color: #16803c;
+  background: #edf8f1;
+  color: #16803c;
+}
+.branch-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 14px;
+}
+.branch-summary-card {
+  display: block;
+  border: 1px solid #e2e8e4;
+  border-radius: 15px;
+  padding: 18px;
+  background: #fff;
+  transition: .18s ease;
+}
+.branch-summary-card:hover {
+  border-color: #b9d9c3;
+  box-shadow: 0 12px 30px rgba(19,50,30,.06);
+  transform: translateY(-2px);
+}
+.branch-summary-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.branch-summary-title h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+}
+.status-dot {
+  font-size: 11px;
+  color: #667085;
+  white-space: nowrap;
+}
+.status-dot.open {
+  color: #16803c;
+  font-weight: 700;
+}
+.branch-summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+.branch-summary-metrics > div {
+  border-top: 1px solid #edf0f2;
+  padding-top: 10px;
+}
+.branch-summary-metrics small {
+  display: block;
+  color: #667085;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.branch-summary-metrics strong {
+  font-size: 15px;
+}
+@media(max-width:900px) {
+  .branch-switcher { justify-content:flex-start; max-width:none; margin-top:18px; }
+  .branch-summary-grid { grid-template-columns:1fr; }
+}
+@media(max-width:600px) {
+  .branch-summary-metrics { grid-template-columns:1fr 1fr; }
+}
