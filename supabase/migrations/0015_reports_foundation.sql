@@ -1244,8 +1244,8 @@ BEGIN
     AND (p_branch_id IS NULL OR b.id = p_branch_id)
     AND EXISTS (
       SELECT 1
-      FROM public.report_allowed_branches(p_organization_id := b.organization_id, p_branch_id := b.id)
-      WHERE report_allowed_branches.branch_id = b.id
+      FROM public.report_allowed_branches(b.organization_id, b.id) ab
+      WHERE ab.branch_id = b.id
     )
   ORDER BY b.is_headquarters DESC, b.created_at, b.name;
 END;
