@@ -83,3 +83,23 @@ export async function loadReports(params: {
     finance: finance.data as FinancialReport,
   };
 }
+
+export async function loadSalesExport(params: {
+  organizationId: string;
+  branchId: string | null;
+  range: ReportRange;
+}): Promise<SalesReport["rows"]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_sales_report", {
+    p_organization_id: params.organizationId,
+    p_branch_id: params.branchId,
+    p_start: params.range.start,
+    p_end: params.range.end,
+    p_compare_start: null,
+    p_compare_end: null,
+    p_page: 1,
+    p_page_size: 5000,
+  });
+  if (error) throw new Error(error.message);
+  return ((data as SalesReport | null)?.rows ?? []) as SalesReport["rows"];
+}
