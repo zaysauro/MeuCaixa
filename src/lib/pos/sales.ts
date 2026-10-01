@@ -109,11 +109,16 @@ export function validatePayments(
     };
   }
 
-  const cashPayment = payments.find((payment) => payment.method === "cash");
-  const change =
-    cashPayment?.receivedAmount !== undefined
-      ? roundMoney(Math.max(cashReceived - Number(cashPayment.amount), 0))
-      : 0;
+  const cashPayments = payments.filter((payment) => payment.method === "cash");
+  const cashAmount = roundMoney(
+    cashPayments.reduce((sum, payment) => sum + Number(payment.amount), 0)
+  );
+  const hasCashReceived = cashPayments.some(
+    (payment) => payment.receivedAmount !== undefined
+  );
+  const change = hasCashReceived
+    ? roundMoney(Math.max(cashReceived - cashAmount, 0))
+    : 0;
 
   return { ok: true, change };
 }
@@ -140,7 +145,18 @@ export async function completePOSSale(params: {
     throw new Error("Adicione pelo menos um produto à venda.");
   }
 
+  const productIds = new Set<string>();
+
   for (const item of params.items) {
+    if (productIds.has(item.product.id)) {
+      throw new Error(
+        "O produto \"" + item.product.name + "\" apareceu mais de uma vez no carrinho. " +
+          "Concentre a quantidade em uma única linha."
+      );
+    }
+
+    productIds.add(item.product.id);
+
     if (item.quantity <= 0) {
       throw new Error(`Quantidade inválida para ${item.product.name}.`);
     }
