@@ -11,6 +11,9 @@ import CustomerModal from "./components/CustomerModal";
 import SellerModal from "./components/SellerModal";
 import PaymentModal from "./components/PaymentModal";
 import SaleReceipt from "./components/SaleReceipt";
+import {
+  createReceiptPdf,
+} from "./components/ReceiptPdf";
 import { getSaleReceipt, logReceiptAction } from "@/lib/receipt/receipt";
 import type { SaleReceiptData } from "@/lib/receipt/types";
 import { usePOSShortcuts } from "./hooks/usePOSShortcuts";
@@ -62,6 +65,8 @@ export default function VendasPage() {
   const [receipt, setReceipt] = useState<SaleReceiptData | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [receiptError, setReceiptError] = useState("");
+  const [receiptCopyLabel, setReceiptCopyLabel] = useState<"ORIGINAL" | "2ª VIA">("ORIGINAL");
+  const [receiptActionLoading, setReceiptActionLoading] = useState(false);
 
   const totals = useMemo(() => getCartTotals(cart, globalDiscount), [cart, globalDiscount]);
 
@@ -216,8 +221,103 @@ export default function VendasPage() {
     setCompleted(null);
     setReceipt(null);
     setReceiptError("");
+    setReceiptCopyLabel("ORIGINAL");
+    setReceiptActionLoading(false);
     setError("");
     window.setTimeout(() => searchRef.current?.focus(), 0);
+  }
+
+  async function printReceipt(copy: "ORIGINAL" | "2ª VIA" = "2ª VIA") {
+    if (!receipt) return;
+    setReceiptActionLoading(true);
+    setReceiptError("");
+
+    try {
+      setReceiptCopyLabel(copy);
+      if (copy === "2ª VIA") {
+        await logReceiptAction(receipt.sale.id, "reprint");
+      }
+      window.setTimeout(() => window.print(), 0);
+    } catch (err) {
+      setReceiptError(
+        err instanceof Error ? err.message : "Não foi possível registrar a impressão."
+      );
+    } finally {
+      setReceiptActionLoading(false);
+    }
+  }
+
+  async function downloadReceiptPdf() {
+    if (!receipt) return;
+    setReceiptActionLoading(true);
+    setReceiptError("");
+
+    try {
+      setReceiptCopyLabel("2ª VIA");
+      await logReceiptAction(receipt.sale.id, "pdf");
+      const blob = await createReceiptPdf(receipt, receipt.settings.width, "2ª VIA");
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `meu-caixa-venda-${String(receipt.sale.sale_number).padStart(6, "0")}.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setReceiptError(
+        err instanceof Error ? err.message : "Não foi possível gerar o PDF."
+      );
+    } finally {
+      setReceiptActionLoading(false);
+    }
+  }
+
+  async function shareReceipt() {
+    if (!receipt) return;
+    setReceiptActionLoading(true);
+    setReceiptError("");
+
+    try {
+      const blob = await createReceiptPdf(receipt, receipt.settings.width, "2ª VIA");
+      const file = new File(
+        [blob],
+        `meu-caixa-venda-${String(receipt.sale.sale_number).padStart(6, "0")}.pdf`,
+        { type: "application/pdf" }
+      );
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: `Comprovante #${String(receipt.sale.sale_number).padStart(6, "0")}`,
+          text: "Comprovante de venda — MeuCaixa",
+          files: [file],
+        });
+        await logReceiptAction(receipt.sale.id, "share");
+        return;
+      }
+
+      await navigator.clipboard?.writeText(
+        `MeuCaixa — Venda #${String(receipt.sale.sale_number).padStart(6, "0")} — ${formatReceiptTotal(receipt.sale.total)}`
+      );
+
+      const message = encodeURIComponent(
+        `Comprovante MeuCaixa — Venda #${String(receipt.sale.sale_number).padStart(6, "0")} — ${formatReceiptTotal(receipt.sale.total)}`
+      );
+      window.open(`https://wa.me/?text=${message}`, "_blank", "noopener,noreferrer");
+      await logReceiptAction(receipt.sale.id, "share");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setReceiptError(
+        err instanceof Error ? err.message : "Não foi possível compartilhar o comprovante."
+      );
+    } finally {
+      setReceiptActionLoading(false);
+    }
+  }
+
+  function formatReceiptTotal(value: number) {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
   }
 
   function handleEscape() {
@@ -243,11 +343,13 @@ export default function VendasPage() {
 
   usePOSShortcuts({
     onSearch: () => searchRef.current?.focus(),
-    onCustomer: () => setCustomerOpen(true),
-    onDiscount: () => { if (cart.length) setGlobalDiscountOpen(true); },
-    onPayment: openPayment,
+    onCustomer: () => { if (!completed) setCustomerOpen(true); },
+    onDiscount: () => { if (!completed && cart.length) setGlobalDiscountOpen(true); },
+    onPayment: () => { if (!completed) openPayment(); },
     onEscape: handleEscape,
-    onConfirm: openPayment,
+    onConfirm: () => { if (completed) newSale(); else openPayment(); },
+    onPrint: () => { if (completed && receipt) void printReceipt("2ª VIA"); },
+    onNewSale: () => { if (completed) newSale(); },
   });
 
   if (loading) {
@@ -272,10 +374,26 @@ export default function VendasPage() {
             <button
               className="button secondary"
               type="button"
-              disabled={!receipt}
-              onClick={() => window.print()}
+              disabled={!receipt || receiptActionLoading}
+              onClick={() => void printReceipt("2ª VIA")}
             >
-              <Printer size={17} /> Imprimir
+              <Printer size={17} /> Imprimir 2ª via
+            </button>
+            <button
+              className="button secondary"
+              type="button"
+              disabled={!receipt || receiptActionLoading}
+              onClick={() => void downloadReceiptPdf()}
+            >
+              PDF
+            </button>
+            <button
+              className="button secondary"
+              type="button"
+              disabled={!receipt || receiptActionLoading}
+              onClick={() => void shareReceipt()}
+            >
+              Compartilhar
             </button>
             <button className="button primary" type="button" onClick={newSale}>
               <RotateCcw size={17} /> Nova venda
@@ -294,7 +412,9 @@ export default function VendasPage() {
             </div>
           )}
 
-          {receipt && <SaleReceipt receipt={receipt} copyLabel="ORIGINAL" />}
+          {receipt && (
+            <SaleReceipt receipt={receipt} copyLabel={receiptCopyLabel} />
+          )}
         </div>
       </div>
     );
