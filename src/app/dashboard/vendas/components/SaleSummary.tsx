@@ -18,7 +18,7 @@ export default function SaleSummary({ subtotal, discount, total, customer, selle
           <span><strong>{customer?.name ?? "Consumidor final"}</strong><small>{customer?.document ?? "F4 para selecionar cliente"}</small></span>
         </button>
       </div>
-      <div className="pos-summary-section"><div className="pos-summary-label">VENDEDOR</div><div className="pos-seller">{sellerName}</div></div>
+      <div className="pos-summary-section"><div className="pos-summary-label">VENDEDOR</div><button type="button" className="pos-seller-button" onClick={onSeller}>{sellerName}</button></div>
       <div className="pos-totals">
         <div><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
         <div><span>Descontos</span><button type="button" onClick={onDiscount}>{money(discount)}</button></div>
