@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -11,25 +13,87 @@ export default function LoginPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setMessage("");
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const supabase = createClient();
 
-    if (error) setMessage(error.message);
-    else window.location.href = "/dashboard";
+      const signIn = supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("A conexão com o servidor demorou demais. Verifique sua conexão e tente novamente.")), 15000)
+      );
 
-    setLoading(false);
+      const { error } = await Promise.race([signIn, timeout]);
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      const { data: organization, error: organizationError } = await supabase.rpc("get_my_organization");
+
+      if (organizationError) {
+        await supabase.auth.signOut();
+        setMessage("Não foi possível carregar a empresa vinculada a este acesso. Tente novamente ou fale com o suporte.");
+        return;
+      }
+
+      if (!organization?.length) {
+        await supabase.auth.signOut();
+        setMessage("Este usuário ainda não está vinculado a uma empresa. O acesso precisa ser configurado pelo administrador.");
+        return;
+      }
+
+      router.replace("/dashboard");
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível entrar. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  return <main className="landing"><form className="landing-card" onSubmit={handleSubmit}>
-    <div className="kumo-login-brand"><img className="kumo-logo" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" /></div><span className="eyebrow">MEUCAIXA</span>
-    <h1>Entrar</h1>
-    <p>Acesse o painel da sua empresa.</p>
-    <input className="field" type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} required />
-    <input className="field" type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} required />
-    {message && <div className="error">{message}</div>}
-    <button className="button primary" disabled={loading}>{loading ? "Entrando..." : "Entrar"}</button>
-  </form></main>;
+  return (
+    <main className="login-page">
+      <form className="login-card" onSubmit={handleSubmit}>
+        <div className="kumo-login-brand">
+          <img className="kumo-logo" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" />
+        </div>
+
+        <span className="eyebrow">MEUCAIXA</span>
+        <h1>Entrar</h1>
+        <p>Acesse o painel da sua empresa.</p>
+
+        <div className="login-fields">
+          <input
+            className="field"
+            type="email"
+            placeholder="E-mail"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+          <input
+            className="field"
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        </div>
+
+        {message && <div className="error">{message}</div>}
+
+        <button className="button primary login-button" disabled={loading}>
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
+    </main>
+  );
 }
