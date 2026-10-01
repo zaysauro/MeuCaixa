@@ -899,7 +899,6 @@ BEGIN
       ps.branch_id,
       count(*) FILTER (
         WHERE p.active = true
-          AND ps.minimum_stock > 0
           AND ps.stock_quantity <= ps.minimum_stock
       ) AS low_stock_count
     FROM public.branch_product_stock ps
