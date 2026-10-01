@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Bug, CheckCircle2, Mail, MessageCircle, Package, Store, WalletCards, BarChart3, Boxes, Users } from "lucide-react";
 
-const SUPPORT_WHATSAPP = ""; // Ex.: "5541999999999"
-const SUPPORT_EMAIL = ""; // Ex.: "suporte@kumo.com.br"
+const SUPPORT_WHATSAPP = "5541997084653";
+const SUPPORT_EMAIL = "kumosoftwares@gmail.com";
 const APP_VERSION = "0.1.0";
 
 const steps = [
