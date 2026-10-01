@@ -1,11 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -21,37 +19,40 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
 
-      const signIn = supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const signIn = supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
       const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("A conexão com o servidor demorou demais. Verifique sua conexão e tente novamente.")), 15000)
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "A conexão com o servidor demorou demais. Verifique as configurações do Supabase e tente novamente."
+              )
+            ),
+          15000
+        )
       );
 
       const { error } = await Promise.race([signIn, timeout]);
 
       if (error) {
         setMessage(error.message);
+        setLoading(false);
         return;
       }
 
-      const { data: organization, error: organizationError } = await supabase.rpc("get_my_organization");
-
-      if (organizationError) {
-        await supabase.auth.signOut();
-        setMessage("Não foi possível carregar a empresa vinculada a este acesso. Tente novamente ou fale com o suporte.");
-        return;
-      }
-
-      if (!organization?.length) {
-        await supabase.auth.signOut();
-        setMessage("Este usuário ainda não está vinculado a uma empresa. O acesso precisa ser configurado pelo administrador.");
-        return;
-      }
-
-      router.replace("/dashboard");
-      router.refresh();
+      // Navegação completa para garantir que os cookies da sessão
+      // sejam reconhecidos pelo middleware/server do Next.js.
+      window.location.assign("/dashboard");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Não foi possível entrar. Tente novamente.");
-    } finally {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível entrar. Tente novamente."
+      );
       setLoading(false);
     }
   }
@@ -60,7 +61,11 @@ export default function LoginPage() {
     <main className="login-page">
       <form className="login-card" onSubmit={handleSubmit}>
         <div className="kumo-login-brand">
-          <img className="kumo-logo" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" />
+          <img
+            className="kumo-logo"
+            src="/kumo-logo.svg"
+            alt="Kumo — Soluções em Tecnologia"
+          />
         </div>
 
         <span className="eyebrow">MEUCAIXA</span>
@@ -73,7 +78,7 @@ export default function LoginPage() {
             type="email"
             placeholder="E-mail"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
           />
@@ -82,7 +87,7 @@ export default function LoginPage() {
             type="password"
             placeholder="Senha"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
           />
