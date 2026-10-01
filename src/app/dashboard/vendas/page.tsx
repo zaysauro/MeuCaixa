@@ -238,7 +238,12 @@ export default function VendasPage() {
       try {
         const receiptData = await getSaleReceipt(result.saleId);
         setReceipt(receiptData);
+        setReceiptCopyLabel("ORIGINAL");
         await logReceiptAction(result.saleId, "original");
+
+        if (receiptData.settings.auto_print) {
+          window.setTimeout(() => window.print(), 250);
+        }
       } catch (receiptErr) {
         setReceiptError(
           receiptErr instanceof Error
