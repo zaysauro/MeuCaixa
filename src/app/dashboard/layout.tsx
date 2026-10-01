@@ -10,25 +10,37 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: org } = await supabase.rpc("get_my_organization");
   if (!org?.length) redirect("/onboarding");
 
-  return <div className="app-shell">
-    <aside className="sidebar">
-      <Link href="/dashboard" className="brand"><img className="kumo-logo kumo-logo-sidebar" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" /><span className="meucaixa-brand-name">MeuCaixa</span></Link>
-      <nav>
-        <Link href="/dashboard">Visão geral</Link>
-        <Link href="/dashboard/vendas">Vendas / PDV</Link>
-        <Link href="/dashboard/produtos">Produtos</Link>
-        <Link href="/dashboard/estoque">Estoque</Link>
-        <Link href="/dashboard/caixa">Caixa</Link>
-        <Link href="/dashboard/financeiro">Financeiro</Link>
-        <Link href="/dashboard/clientes">Clientes</Link>
-        <Link href="/dashboard/fornecedores">Fornecedores</Link>
-        <Link href="/dashboard/relatorios">Relatórios</Link>
-      </nav>
-      <div className="sidebar-footer">
-        <small>{org[0].organization_name}</small>
-        <form action="/auth/signout" method="post"><button>Sair</button></form>
-      </div>
-    </aside>
-    <section className="main-content">{children}</section>
-  </div>;
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <Link href="/dashboard" className="brand">
+          <img className="kumo-logo kumo-logo-sidebar" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" />
+          <span className="meucaixa-brand-name">MeuCaixa</span>
+        </Link>
+
+        <nav>
+          <Link href="/dashboard">Visão geral</Link>
+          <Link href="/dashboard/filiais">Matriz e filiais</Link>
+          <Link href="/dashboard/vendas">Vendas / PDV</Link>
+          <Link href="/dashboard/produtos">Produtos</Link>
+          <Link href="/dashboard/estoque">Estoque</Link>
+          <Link href="/dashboard/caixa">Caixa</Link>
+          <Link href="/dashboard/financeiro">Financeiro</Link>
+          <Link href="/dashboard/clientes">Clientes</Link>
+          <Link href="/dashboard/fornecedores">Fornecedores</Link>
+          <Link href="/dashboard/relatorios">Relatórios</Link>
+        </nav>
+
+        <div className="sidebar-footer">
+          <small>{org[0].organization_name}</small>
+          <small>{org[0].branch_name} · {org[0].role}</small>
+          <form action="/auth/signout" method="post">
+            <button>Sair</button>
+          </form>
+        </div>
+      </aside>
+
+      <section className="main-content">{children}</section>
+    </div>
+  );
 }
