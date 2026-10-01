@@ -819,7 +819,7 @@ BEGIN
           COALESCE((
             SELECT sum(cm.amount)
             FROM public.cash_movements cm
-            WHERE cm.created_by = cr.closed_by
+            WHERE cm.created_by = cr.opened_by
               AND cm.branch_id IN (
                 SELECT ab.branch_id
                 FROM public.report_allowed_branches(p_organization_id, p_branch_id) ab
