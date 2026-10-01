@@ -30,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Link href="/dashboard/clientes">Clientes</Link>
           <Link href="/dashboard/fornecedores">Fornecedores</Link>
           <Link href="/dashboard/relatorios">Relatórios</Link>
+          <Link href="/dashboard/configuracoes/comprovante">Configurações</Link>
         </nav>
 
         <div className="sidebar-tools">
