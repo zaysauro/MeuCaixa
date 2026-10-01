@@ -16,7 +16,7 @@ import {
 import { Download, FileText, Printer, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { filtersToQuery, getReportRange, getTodayInput } from "@/lib/reports/filters";
-import { loadReportBranches, loadReports } from "@/lib/reports/api";
+import { loadReportBranches, loadReports, loadSalesExport } from "@/lib/reports/api";
 import type { BranchOption, ReportFilters, ReportPeriod, ReportView } from "@/lib/reports/types";
 
 const money = (value: number) =>
@@ -388,11 +388,20 @@ export default function ReportsDashboard() {
 
   const selectedBranch = branches.find((b) => b.branch_id === filters.branchId);
 
-  const exportCurrent = () => {
-    if (!data) return;
+  const [exporting, setExporting] = useState(false);
+
+  const exportCurrent = async () => {
+    if (!data || !range || !organizationId) return;
+    setExporting(true);
+    try {
     if (tab === "vendas") {
+      const rows = await loadSalesExport({
+        organizationId,
+        branchId: filters.branchId,
+        range,
+      });
       exportRows(
-        data.sales.rows.map((x: any) => ({
+        rows.map((x: any) => ({
           Venda: `#${String(x.sale_number).padStart(6, "0")}`,
           Data: new Date(x.created_at).toLocaleString("pt-BR"),
           Filial: x.branch_name,
@@ -436,6 +445,9 @@ export default function ReportsDashboard() {
         Despesas: Number(x.expense).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
       })), "meucaixa-financeiro.csv");
     }
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (range === null) {
@@ -451,7 +463,7 @@ export default function ReportsDashboard() {
           <p>Vendas, produtos, caixa, filiais e financeiro em uma única visão operacional.</p>
         </div>
         <div className="report-actions">
-          <button className="button secondary" onClick={exportCurrent} disabled={!data}><Download size={15} /> CSV</button>
+          <button className="button secondary" onClick={exportCurrent} disabled={!data || exporting}><Download size={15} /> {exporting ? "Exportando..." : "CSV"}</button>
           <button className="button secondary" onClick={() => window.print()}><Printer size={15} /> Imprimir / PDF</button>
           <button className="button secondary" onClick={() => window.location.reload()}><RefreshCw size={15} /> Atualizar</button>
         </div>
