@@ -11,6 +11,8 @@ import CustomerModal from "./components/CustomerModal";
 import SellerModal from "./components/SellerModal";
 import PaymentModal from "./components/PaymentModal";
 import SaleReceipt from "./components/SaleReceipt";
+import { getSaleReceipt, logReceiptAction } from "@/lib/receipt/receipt";
+import type { SaleReceiptData } from "@/lib/receipt/types";
 import { usePOSShortcuts } from "./hooks/usePOSShortcuts";
 import { getCartTotals, completePOSSale } from "@/lib/pos/sales";
 import { getPOSOrganization } from "@/lib/pos/customers";
@@ -57,6 +59,9 @@ export default function VendasPage() {
     change: number;
     payments: PaymentInput[];
   } | null>(null);
+  const [receipt, setReceipt] = useState<SaleReceiptData | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const [receiptError, setReceiptError] = useState("");
 
   const totals = useMemo(() => getCartTotals(cart, globalDiscount), [cart, globalDiscount]);
 
@@ -178,6 +183,23 @@ export default function VendasPage() {
 
       setCompleted({ ...result, payments: pendingPayments });
       setConfirmOpen(false);
+      setReceipt(null);
+      setReceiptError("");
+      setReceiptLoading(true);
+
+      try {
+        const receiptData = await getSaleReceipt(result.saleId);
+        setReceipt(receiptData);
+        await logReceiptAction(result.saleId, "original");
+      } catch (receiptErr) {
+        setReceiptError(
+          receiptErr instanceof Error
+            ? receiptErr.message
+            : "A venda foi concluída, mas o comprovante não pôde ser carregado."
+        );
+      } finally {
+        setReceiptLoading(false);
+      }
       setCart([]);
       setCustomer(null);
       setGlobalDiscount(0);
@@ -192,6 +214,8 @@ export default function VendasPage() {
 
   function newSale() {
     setCompleted(null);
+    setReceipt(null);
+    setReceiptError("");
     setError("");
     window.setTimeout(() => searchRef.current?.focus(), 0);
   }
@@ -245,19 +269,32 @@ export default function VendasPage() {
             <div><small>Troco</small><strong>{money(completed.change)}</strong></div>
           </div>
           <div className="completed-actions">
-            <button className="button secondary" type="button" onClick={() => window.print()}><Printer size={17} /> Imprimir / PDF</button>
-            <button className="button primary" type="button" onClick={newSale}><RotateCcw size={17} /> Nova venda</button>
+            <button
+              className="button secondary"
+              type="button"
+              disabled={!receipt}
+              onClick={() => window.print()}
+            >
+              <Printer size={17} /> Imprimir
+            </button>
+            <button className="button primary" type="button" onClick={newSale}>
+              <RotateCcw size={17} /> Nova venda
+            </button>
           </div>
-          <SaleReceipt
-            saleId={completed.saleId}
-            total={completed.total}
-            subtotal={completed.subtotal}
-            discount={completed.discount}
-            payments={completed.payments}
-            change={completed.change}
-            companyName={organizationName}
-            branchName={branchName}
-          />
+
+          {receiptLoading && (
+            <div className="panel" style={{ marginTop: 16, padding: 16 }}>
+              Carregando comprovante...
+            </div>
+          )}
+
+          {receiptError && (
+            <div className="error" style={{ marginTop: 16 }}>
+              {receiptError}
+            </div>
+          )}
+
+          {receipt && <SaleReceipt receipt={receipt} copyLabel="ORIGINAL" />}
         </div>
       </div>
     );
