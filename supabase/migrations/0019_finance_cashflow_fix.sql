@@ -1,9 +1,10 @@
 BEGIN;
 
--- Existing sale_payments predates financial timestamps. Add one safely so
--- cash-flow can use the payment's actual timestamp without duplicating sales.
+-- Backfill existing PDV payment timestamps from the source sale.
+-- The column is made nullable during the migration so the backfill can
+-- actually happen before the NOT NULL/default constraints are restored.
 ALTER TABLE public.sale_payments
-  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+  ADD COLUMN IF NOT EXISTS created_at timestamptz;
 
 UPDATE public.sale_payments sp
 SET created_at = s.created_at
@@ -11,10 +12,13 @@ FROM public.sales s
 WHERE s.id = sp.sale_id
   AND sp.created_at IS NULL;
 
+ALTER TABLE public.sale_payments
+  ALTER COLUMN created_at SET DEFAULT now(),
+  ALTER COLUMN created_at SET NOT NULL;
+
 CREATE INDEX IF NOT EXISTS sale_payments_sale_created_idx
   ON public.sale_payments (sale_id, created_at);
 
--- Cash flow V2: includes account opening balance and accumulated balance.
 CREATE OR REPLACE FUNCTION public.get_cashflow_report(
   p_organization_id uuid,
   p_branch_id uuid DEFAULT NULL,
@@ -45,7 +49,7 @@ BEGIN
   FROM public.financial_accounts a
   WHERE a.organization_id = p_organization_id
     AND a.active = true
-    AND a.opening_balance_date <= v_start - 1
+    AND a.opening_balance_date <= v_start
     AND (p_branch_id IS NULL OR a.branch_id = p_branch_id OR a.branch_id IS NULL)
     AND (
       a.branch_id IS NULL
@@ -152,8 +156,7 @@ BEGIN
         'net', COALESCE(sum(net),0)
       ) FROM normalized
     )
-  )
-  INTO v_result;
+  ) INTO v_result;
 
   RETURN v_result;
 END;
