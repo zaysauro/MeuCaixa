@@ -47,7 +47,7 @@ export default function StockDashboard(){
    current?supabase.from("branch_product_stock").select("branch_id,product_id,stock_quantity,minimum_stock,average_cost").eq("branch_id",current):Promise.resolve({data:[],error:null} as any),
    current?supabase.from("inventory_movements").select("id,product_id,type,quantity,quantity_delta,previous_quantity,new_quantity,unit_cost,reason,created_at").eq("branch_id",current).order("created_at",{ascending:false}).limit(200):Promise.resolve({data:[],error:null} as any),
    supabase.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,created_at").order("created_at",{ascending:false}).limit(100),
-   supabase.from("suppliers").select("id,name").eq("active",true).order("name")
+   supabase.from("suppliers").select("id,name").order("name")
   ]);
   if(p.error) setMessage(p.error.message); else setProducts((p.data??[]) as Product[]);
   if(s.error) setMessage(s.error.message); else setStock((s.data??[]) as Stock[]);
