@@ -58,6 +58,26 @@ ON public.inventory_movements(branch_id,product_id,created_at,id);
 CREATE INDEX IF NOT EXISTS inventory_movements_reference_idx
 ON public.inventory_movements(reference_id);
 
+-- Vincula entradas ao cadastro de fornecedores já existente.
+ALTER TABLE public.inventory_movements
+  ADD COLUMN IF NOT EXISTS supplier_id uuid REFERENCES public.suppliers(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS inventory_movements_supplier_idx
+ON public.inventory_movements(supplier_id);
+
+CREATE OR REPLACE FUNCTION public.stock_entry(
+ p_branch_id uuid,p_product_id uuid,p_quantity numeric,p_unit_cost numeric,
+ p_reason text,p_supplier_id uuid
+) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+DECLARE v_id uuid;
+BEGIN
+ IF p_quantity<=0 OR COALESCE(p_unit_cost,0)<0 THEN RAISE EXCEPTION 'invalid_entry'; END IF;
+ v_id:=public.post_stock_movement(p_branch_id,p_product_id,p_quantity,'entry',p_reason,NULL,p_unit_cost);
+ UPDATE public.inventory_movements SET supplier_id=p_supplier_id WHERE id=v_id;
+ RETURN v_id;
+END; $;
+GRANT EXECUTE ON FUNCTION public.stock_entry(uuid,uuid,numeric,numeric,text,uuid) TO authenticated;
+
 -- Histórico de custo médio
 CREATE TABLE IF NOT EXISTS public.branch_product_cost_history (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
