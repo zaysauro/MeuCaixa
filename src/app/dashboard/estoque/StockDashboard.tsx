@@ -8,6 +8,7 @@ type Product={id:string;name:string;sku:string|null;unit:string;cost_price:numbe
 type Stock={branch_id:string;product_id:string;stock_quantity:number;minimum_stock:number;average_cost:number};
 type Movement={id:string;product_id:string;type:string;quantity:number;quantity_delta:number;previous_quantity:number;new_quantity:number;unit_cost:number;reason:string|null;created_at:string};
 type Transfer={id:string;transfer_number:number;source_branch_id:string;destination_branch_id:string;status:string;notes:string|null;created_at:string};
+type Supplier={id:string;name:string};
 
 const money=(n:number)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const statusLabel=(s:string)=>({requested:"Solicitada",sent:"Enviada",received:"Recebida",cancelled:"Cancelada"}[s]??s);
@@ -18,6 +19,7 @@ export default function StockDashboard(){
  const [branches,setBranches]=useState<Branch[]>([]);
  const [branchId,setBranchId]=useState("");
  const [products,setProducts]=useState<Product[]>([]);
+ const [suppliers,setSuppliers]=useState<Supplier[]>([]);
  const [stock,setStock]=useState<Stock[]>([]);
  const [movements,setMovements]=useState<Movement[]>([]);
  const [transfers,setTransfers]=useState<Transfer[]>([]);
@@ -28,6 +30,7 @@ export default function StockDashboard(){
  const [qty,setQty]=useState("");
  const [cost,setCost]=useState("");
  const [reason,setReason]=useState("");
+ const [supplierId,setSupplierId]=useState("");
  const [destination,setDestination]=useState("");
  const [transferProduct,setTransferProduct]=useState("");
  const [transferQty,setTransferQty]=useState("");
@@ -39,16 +42,18 @@ export default function StockDashboard(){
   setBranches(bs);
   const current=branchId||bs[0]?.branch_id||"";
   if(current&&!branchId)setBranchId(current);
-  const [p,s,m,t]=await Promise.all([
+  const [p,s,m,t,sup]=await Promise.all([
    supabase.from("products").select("id,name,sku,unit,cost_price,sale_price,minimum_stock").eq("active",true).order("name"),
    current?supabase.from("branch_product_stock").select("branch_id,product_id,stock_quantity,minimum_stock,average_cost").eq("branch_id",current):Promise.resolve({data:[],error:null} as any),
    current?supabase.from("inventory_movements").select("id,product_id,type,quantity,quantity_delta,previous_quantity,new_quantity,unit_cost,reason,created_at").eq("branch_id",current).order("created_at",{ascending:false}).limit(200):Promise.resolve({data:[],error:null} as any),
-   supabase.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,created_at").order("created_at",{ascending:false}).limit(100)
+   supabase.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,created_at").order("created_at",{ascending:false}).limit(100),
+   supabase.from("suppliers").select("id,name").eq("active",true).order("name")
   ]);
   if(p.error) setMessage(p.error.message); else setProducts((p.data??[]) as Product[]);
   if(s.error) setMessage(s.error.message); else setStock((s.data??[]) as Stock[]);
   if(m.error) setMessage(m.error.message); else setMovements((m.data??[]) as Movement[]);
   if(t.error) setMessage(t.error.message); else setTransfers((t.data??[]) as Transfer[]);
+  if(!sup.error) setSuppliers((sup.data??[]) as Supplier[]);
   setLoading(false);
  }
 
@@ -68,7 +73,7 @@ export default function StockDashboard(){
   setBusy(false);
  }
 
- function clearForm(){setSelectedProduct("");setQty("");setCost("");setReason("");setTransferProduct("");setTransferQty("");}
+ function clearForm(){setSelectedProduct("");setQty("");setCost("");setReason("");setSupplierId("");setTransferProduct("");setTransferQty("");}
 
  return <div className="stock-module">
   <div className="page-header">
@@ -101,9 +106,12 @@ export default function StockDashboard(){
    {["entry","exit","inventory"].includes(tab)&&<div className="panel stock-form"><h2>{tab==="entry"?"Entrada de estoque":tab==="exit"?"Saída de estoque":"Inventário físico"}</h2>
     <label>Produto<select value={selectedProduct} onChange={e=>setSelectedProduct(e.target.value)}><option value="">Selecione</option>{products.map(p=><option key={p.id} value={p.id}>{p.name} · {p.sku||"sem SKU"}</option>)}</select></label>
     <label>{tab==="inventory"?"Quantidade contada":"Quantidade"}<input type="number" min="0" step="0.001" value={qty} onChange={e=>setQty(e.target.value)}/></label>
-    {tab==="entry"&&<label>Custo unitário<input type="number" min="0" step="0.0001" value={cost} onChange={e=>setCost(e.target.value)}/></label>}
+    {tab==="entry"&&<>
+    <label>Custo unitário<input type="number" min="0" step="0.0001" value={cost} onChange={e=>setCost(e.target.value)}/></label>
+    <label>Fornecedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Sem fornecedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+   </>}
     <label>Motivo{tab!=="entry"&&<span className="required"> obrigatório</span>}<input value={reason} onChange={e=>setReason(e.target.value)} placeholder={tab==="entry"?"Compra/recebimento":"Informe o motivo da operação"}/></label>
-    <button className="primary" disabled={busy||!selectedProduct||!qty||(tab!=="entry"&&!reason.trim())} onClick={()=>tab==="entry"?call("stock_entry",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_unit_cost:Number(cost),p_reason:reason||"Entrada de estoque"}):tab==="exit"?call("stock_exit",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_reason:reason}):call("quick_inventory",{p_branch_id:branchId,p_product_id:selectedProduct,p_counted_quantity:Number(qty),p_reason:reason||"Inventário físico"})}>{busy?"Processando...":"Confirmar operação"}</button>
+    <button className="primary" disabled={busy||!selectedProduct||!qty||(tab!=="entry"&&!reason.trim())} onClick={()=>tab==="entry"?call("stock_entry",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_unit_cost:Number(cost),p_reason:reason||"Entrada de estoque",p_supplier_id:supplierId||null}):tab==="exit"?call("stock_exit",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_reason:reason}):call("quick_inventory",{p_branch_id:branchId,p_product_id:selectedProduct,p_counted_quantity:Number(qty),p_reason:reason||"Inventário físico"})}>{busy?"Processando...":"Confirmar operação"}</button>
    </div>}
 
    {tab==="transfer"&&<div className="stock-transfer-grid"><div className="panel stock-form"><h2>Nova transferência</h2><label>Filial de destino<select value={destination} onChange={e=>setDestination(e.target.value)}><option value="">Selecione</option>{branches.filter(b=>b.branch_id!==branchId).map(b=><option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}</select></label><label>Produto<select value={transferProduct} onChange={e=>setTransferProduct(e.target.value)}><option value="">Selecione</option>{rows.filter(x=>Number(x.stock_quantity)>0).map(x=><option key={x.product_id} value={x.product_id}>{x.product!.name} · saldo {x.stock_quantity}</option>)}</select></label><label>Quantidade<input type="number" min="0.001" step="0.001" value={transferQty} onChange={e=>setTransferQty(e.target.value)}/></label><button className="primary" disabled={busy||!destination||!transferProduct||!transferQty} onClick={async()=>{await call("create_stock_transfer",{p_source_branch_id:branchId,p_destination_branch_id:destination,p_items:[{product_id:transferProduct,quantity:Number(transferQty)}],p_request_key:crypto.randomUUID(),p_notes:null});clearForm()}}>Solicitar transferência</button></div>
