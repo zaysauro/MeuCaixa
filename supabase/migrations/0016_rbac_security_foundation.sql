@@ -299,6 +299,61 @@ WHERE role = 'operator'
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
+-- HELPERS DE AUTORIZAÇÃO USADOS PELAS POLICIES ABAIXO
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.is_owner(
+  p_organization_id uuid,
+  p_user_id uuid DEFAULT NULL
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.organization_members om
+    WHERE om.organization_id = p_organization_id
+      AND om.user_id = COALESCE(p_user_id, auth.uid())
+      AND om.active = true
+      AND om.role::text = 'owner'
+  );
+$;
+
+REVOKE ALL ON FUNCTION public.is_owner(uuid, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_owner(uuid, uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.has_permission(
+  p_permission_key text,
+  p_organization_id uuid DEFAULT NULL
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.organization_members om
+    JOIN public.role_permissions rp
+      ON rp.role = om.role::text
+     AND rp.permission_key = p_permission_key
+    WHERE om.user_id = auth.uid()
+      AND om.active = true
+      AND (
+        p_organization_id IS NULL
+        OR om.organization_id = p_organization_id
+      )
+  );
+$;
+
+REVOKE ALL ON FUNCTION public.has_permission(text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.has_permission(text, uuid) TO authenticated;
+
+-- ============================================================
 -- 4. ACESSO A MÚLTIPLAS FILIAIS
 -- ============================================================
 
