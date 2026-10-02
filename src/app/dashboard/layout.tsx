@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CircleHelp } from "lucide-react";
+import { canAccessRoute } from "@/lib/rbac";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -10,6 +11,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: org } = await supabase.rpc("get_my_organization");
   if (!org?.length) redirect("/onboarding");
+
+  const role = String(org[0].role || "operator");
+  const navItems = [
+    ["Visão geral", "/dashboard"],
+    ["Matriz e filiais", "/dashboard/filiais"],
+    ["Vendas / PDV", "/dashboard/vendas"],
+    ["Produtos", "/dashboard/produtos"],
+    ["Estoque", "/dashboard/estoque"],
+    ["Caixa", "/dashboard/caixa"],
+    ["Financeiro", "/dashboard/financeiro"],
+    ["Clientes", "/dashboard/clientes"],
+    ["Fornecedores", "/dashboard/fornecedores"],
+    ["Relatórios", "/dashboard/relatorios"],
+    ["Configurações", "/dashboard/configuracoes"],
+  ] as const;
 
   return (
     <div className="app-shell">
@@ -20,17 +36,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Link>
 
         <nav>
-          <Link href="/dashboard">Visão geral</Link>
-          <Link href="/dashboard/filiais">Matriz e filiais</Link>
-          <Link href="/dashboard/vendas">Vendas / PDV</Link>
-          <Link href="/dashboard/produtos">Produtos</Link>
-          <Link href="/dashboard/estoque">Estoque</Link>
-          <Link href="/dashboard/caixa">Caixa</Link>
-          <Link href="/dashboard/financeiro">Financeiro</Link>
-          <Link href="/dashboard/clientes">Clientes</Link>
-          <Link href="/dashboard/fornecedores">Fornecedores</Link>
-          <Link href="/dashboard/relatorios">Relatórios</Link>
-          <Link href="/dashboard/configuracoes/comprovante">Configurações</Link>
+          {navItems.map(([label, href]) =>
+            canAccessRoute(role, href) ? (
+              <Link href={href} key={href}>{label}</Link>
+            ) : null
+          )}
         </nav>
 
         <div className="sidebar-tools">
@@ -39,7 +49,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         <div className="sidebar-footer">
           <small>{org[0].organization_name}</small>
-          <small>{org[0].branch_name} · {org[0].role}</small>
+          <small>{org[0].branch_name} · {role}</small>
           <form action="/auth/signout" method="post">
             <button>Sair</button>
           </form>
