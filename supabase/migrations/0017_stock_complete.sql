@@ -466,6 +466,47 @@ BEGIN
 END; $$;
 GRANT EXECUTE ON FUNCTION public.cancel_stock_transfer(uuid,text) TO authenticated;
 
+-- Cancelamento de venda com estorno de estoque, custo histórico e caixa.
+CREATE OR REPLACE FUNCTION public.cancel_sale(
+ p_sale_id uuid,p_reason text
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+DECLARE
+ v_sale public.sales%ROWTYPE;
+ i record;
+BEGIN
+ SELECT * INTO v_sale FROM public.sales WHERE id=p_sale_id FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'sale_not_found'; END IF;
+ IF NOT public.can_access_branch(v_sale.branch_id) THEN RAISE EXCEPTION 'sale_not_found'; END IF;
+ IF NOT public.can_manage_stock(v_sale.organization_id) THEN RAISE EXCEPTION 'sale_cancel_permission_denied'; END IF;
+ IF v_sale.status<>'completed' THEN RAISE EXCEPTION 'sale_not_completed'; END IF;
+ IF NULLIF(trim(p_reason),'') IS NULL THEN RAISE EXCEPTION 'reason_required'; END IF;
+
+ FOR i IN SELECT * FROM public.sale_items WHERE sale_id=v_sale.id LOOP
+  PERFORM public.post_stock_movement(
+   v_sale.branch_id,i.product_id,i.quantity,'sale_cancellation',
+   'Cancelamento da venda #'||COALESCE(v_sale.sale_number::text,v_sale.id::text)||': '||p_reason,
+   v_sale.id,i.unit_cost
+  );
+ END LOOP;
+
+ INSERT INTO public.cash_movements(
+  organization_id,branch_id,cash_register_id,type,amount,direction,
+  description,reference_id,created_by
+ )
+ VALUES(
+  v_sale.organization_id,v_sale.branch_id,v_sale.cash_register_id,
+  'sale_cancellation',v_sale.total,-1,
+  'Estorno venda #'||COALESCE(v_sale.sale_number::text,v_sale.id::text)||': '||p_reason,
+  v_sale.id,auth.uid()
+ );
+
+ UPDATE public.sales
+ SET status='cancelled'
+ WHERE id=v_sale.id;
+END; $;
+
+GRANT EXECUTE ON FUNCTION public.cancel_sale(uuid,text) TO authenticated;
+
 -- Normaliza movimentos criados pelo PDV atual sem precisar reescrever o complete_sale.
 CREATE OR REPLACE FUNCTION public.normalize_inventory_movement()
 RETURNS trigger LANGUAGE plpgsql AS $$
