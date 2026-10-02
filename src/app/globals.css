@@ -797,3 +797,10 @@ select.field{appearance:auto}
 .transfer-actions .danger{color:#a32626}
 @media(max-width:1000px){.stock-grid{grid-template-columns:repeat(2,1fr)}.stock-transfer-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.stock-grid{grid-template-columns:1fr 1fr}.stock-branch-select{width:100%;margin-top:14px}.transfer-card{display:grid}.transfer-actions{justify-content:flex-start}}
+
+.sales-history-row-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;padding:0}
+.sales-history-open{width:100%;display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(150px,1fr) 100px 120px 24px;align-items:center;gap:15px;padding:15px 18px;border:0;border-bottom:1px solid #edf0ef;background:#fff;text-align:left;cursor:pointer}
+.sales-history-open:hover{background:#f6f9f7}
+.sales-history-cancel{align-self:center;margin-right:10px;border:1px solid #efcccc;background:#fff7f7;color:#a32626;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}
+.sales-history-cancel:disabled{opacity:.5;cursor:wait}
+@media(max-width:800px){.sales-history-row-wrap{grid-template-columns:1fr}.sales-history-open{grid-template-columns:1fr auto;gap:8px 12px}.sales-history-open .sales-history-customer{display:none}.sales-history-open .sales-history-status{grid-column:1}.sales-history-open .sales-history-total{grid-column:2;grid-row:1/3}.sales-history-open>svg{display:none}.sales-history-cancel{margin:0 12px 10px;width:max-content}}
