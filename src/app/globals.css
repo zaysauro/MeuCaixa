@@ -804,3 +804,73 @@ select.field{appearance:auto}
 .sales-history-cancel{align-self:center;margin-right:10px;border:1px solid #efcccc;background:#fff7f7;color:#a32626;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}
 .sales-history-cancel:disabled{opacity:.5;cursor:wait}
 @media(max-width:800px){.sales-history-row-wrap{grid-template-columns:1fr}.sales-history-open{grid-template-columns:1fr auto;gap:8px 12px}.sales-history-open .sales-history-customer{display:none}.sales-history-open .sales-history-status{grid-column:1}.sales-history-open .sales-history-total{grid-column:2;grid-row:1/3}.sales-history-open>svg{display:none}.sales-history-cancel{margin:0 12px 10px;width:max-content}}
+
+
+/* ============================================================
+   MeuCaixa — Financeiro operacional
+   ============================================================ */
+.finance-page{max-width:1500px}
+.finance-header{align-items:flex-start}
+.finance-actions{display:flex;gap:8px;flex-wrap:wrap}
+.finance-actions .button{display:inline-flex;align-items:center;gap:7px}
+.finance-toolbar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid #e1e7e3;border-radius:15px;padding:14px;margin-bottom:12px}
+.finance-toolbar label{min-width:150px}
+.finance-toolbar select,.finance-toolbar input{height:40px;border:1px solid #d9e1dc;border-radius:9px;padding:0 10px;background:#fff}
+.segmented{display:flex;border:1px solid #d9e1dc;border-radius:10px;overflow:hidden;background:#f7f9f7}
+.segmented button{border:0;background:transparent;padding:10px 14px;font-weight:800;color:#66736b;cursor:pointer}
+.segmented button.active{background:#16803c;color:#fff}
+.finance-tabs{display:flex;gap:4px;border-bottom:1px solid #dfe6e1;margin-bottom:18px;overflow-x:auto}
+.finance-tabs button{border:0;background:transparent;padding:11px 14px;color:#66736b;font-weight:800;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.finance-tabs button.active{color:#16803c;border-bottom-color:#16803c}
+.finance-alert-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.finance-alert{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e1e7e3;border-radius:13px;padding:15px}
+.finance-alert svg{color:#16803c}
+.finance-alert b{display:block;font-size:17px}
+.finance-alert span{display:block;color:#718078;font-size:10px;margin-top:3px}
+.finance-alert.danger{border-color:#efd1d1}.finance-alert.danger svg{color:#a32626}
+.finance-alert.warning{border-color:#eadbbd}.finance-alert.warning svg{color:#9a6a12}
+.finance-list-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-end;margin-bottom:14px}
+.finance-list-head h2{margin:0 0 4px}.finance-list-head span{font-size:10px;color:#718078}
+.finance-list-tools{display:flex;gap:8px;flex-wrap:wrap}
+.finance-list-tools select{height:38px;border:1px solid #d9e1dc;border-radius:9px;background:#fff;padding:0 9px}
+.finance-search{height:38px!important;border:1px solid #d9e1dc;border-radius:9px;padding:0 10px;display:flex!important;align-items:center;gap:7px;min-width:220px}
+.finance-search input{border:0;outline:0;width:100%;height:100%;background:transparent}
+.finance-status{display:inline-flex;padding:5px 8px;border-radius:7px;font-size:9px;font-weight:850}
+.finance-status.open{background:#fff6df;color:#8b6100}.finance-status.partial{background:#edf1ff;color:#405c9c}.finance-status.overdue{background:#fbeeee;color:#9b2525}.finance-status.paid,.finance-status.received{background:#edf8f1;color:#16803c}.finance-status.cancelled{background:#f1f2f3;color:#68736d}
+.finance-row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.button.small{padding:8px 10px;font-size:10px}
+.danger-button{color:#a32626!important;background:#fff7f7!important;border:1px solid #efcccc!important}
+.finance-chart{height:180px;display:flex;align-items:flex-end;gap:4px;border-bottom:1px solid #dfe6e1;padding:10px 4px 0;margin-bottom:12px;overflow:hidden}
+.finance-bar-col{height:100%;flex:1;min-width:8px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.finance-bar-wrap{height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.finance-bar-wrap i{display:block;width:min(18px,80%);min-height:3px;background:#16803c;border-radius:4px 4px 0 0}
+.finance-bar-col small{height:12px;font-size:8px;color:#7a877f}
+.finance-recurring-generate{display:flex;justify-content:flex-end;margin-top:14px}
+.finance-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.finance-category-card{border:1px solid #e1e7e3;border-radius:12px;padding:14px;background:#fbfcfb}
+.finance-category-card b{display:block;font-size:13px}.finance-category-card span{display:block;margin-top:5px;color:#718078;font-size:10px}
+.finance-modal{width:min(680px,100%);max-height:90vh;overflow:auto}
+.finance-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+.finance-modal-head h2{margin:0}.finance-modal-head p{font-size:12px;margin-top:5px}
+.icon-button{border:1px solid #d9e1dc;background:#fff;border-radius:8px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
+.finance-settle-total{padding:13px;background:#f1f7f2;border:1px solid #d9e8dd;border-radius:10px;margin-top:14px;font-size:12px;display:flex;justify-content:space-between}
+@media print{
+  .sidebar,.finance-actions,.finance-toolbar,.finance-tabs,.finance-list-tools,.finance-row-actions,.finance-recurring-generate,.modal-backdrop{display:none!important}
+  .main-content{margin:0;width:100%}.finance-page{max-width:none;padding:12px}.panel,.stat-card,.finance-alert{box-shadow:none}
+}
+@media(max-width:950px){
+  .finance-alert-grid{grid-template-columns:1fr 1fr}
+  .finance-list-head{display:grid}
+  .finance-list-tools{width:100%}
+}
+@media(max-width:650px){
+  .finance-actions{display:grid;grid-template-columns:1fr 1fr}
+  .finance-actions .button:last-child{grid-column:1/-1}
+  .finance-toolbar{display:grid;grid-template-columns:1fr 1fr}
+  .segmented{grid-column:1/-1}
+  .finance-toolbar label{min-width:0}
+  .finance-alert-grid{grid-template-columns:1fr 1fr}
+  .finance-list-tools{display:grid;grid-template-columns:1fr}
+  .finance-search{min-width:0}
+  .finance-category-grid{grid-template-columns:1fr}
+}
