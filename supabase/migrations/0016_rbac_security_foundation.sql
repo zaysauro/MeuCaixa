@@ -661,7 +661,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
   SELECT
     ub.branch_id,
     om.organization_id,
@@ -671,27 +671,15 @@ AS $
     ub.active,
     om.role,
     public.has_permission('branches.edit', om.organization_id)
-  FROM public.organization_member_branches omb
-  RIGHT JOIN public.organization_members om
-    ON om.organization_id = omb.organization_id
-   AND om.user_id = omb.user_id
+  FROM public.organization_members om
+  JOIN LATERAL public.user_branches(om.organization_id, om.user_id) ub
+    ON true
   JOIN public.branches b
     ON b.id = ub.branch_id
-  JOIN LATERAL (
-    SELECT *
-    FROM public.user_branches(om.organization_id, om.user_id)
-  ) ub ON ub.branch_id = b.id
   WHERE om.user_id = auth.uid()
     AND om.active = true
-  GROUP BY
-    ub.branch_id,
-    om.organization_id,
-    ub.branch_name,
-    b.code,
-    ub.is_headquarters,
-    ub.active,
-    om.role;
-$;
+  ORDER BY ub.is_headquarters DESC, ub.branch_name;
+$$;
 
 REVOKE ALL ON FUNCTION public.get_my_branches() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_my_branches() TO authenticated;
