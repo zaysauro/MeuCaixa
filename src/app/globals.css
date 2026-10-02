@@ -760,3 +760,40 @@ select.field{appearance:auto}
   .users-modal-actions{display:grid;grid-template-columns:1fr}
   .users-modal-actions .button{width:100%}
 }
+
+/* Estoque completo */
+.stock-module{max-width:1500px}
+.stock-branch-select{min-width:220px;height:42px;border:1px solid #d8e0db;border-radius:10px;padding:0 12px;background:#fff}
+.stock-tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:18px;border-bottom:1px solid #dfe6e1}
+.stock-tabs button{border:0;background:transparent;padding:11px 14px;color:#66736b;font-weight:800;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.stock-tabs button.active{color:#16803c;border-bottom-color:#16803c}
+.stock-message{padding:11px 14px;background:#f1f7f2;border:1px solid #d9e8dd;color:#526159;border-radius:10px;margin-bottom:14px;font-size:12px}
+.stock-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stock-stat{background:#fff;border:1px solid #e1e7e3;border-radius:14px;padding:18px}
+.stock-stat span{display:block;color:#718078;font-size:10px;margin-bottom:8px}
+.stock-stat strong{font-size:24px;letter-spacing:-.04em}
+.stock-wide{grid-column:1/-1;margin-top:2px}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.panel-title h2{margin:0}
+.panel-title span{font-size:11px;color:#77847c}
+.stock-form{max-width:620px}
+.stock-form label{margin-bottom:12px}
+.stock-form select,.stock-form input{width:100%;height:42px;border:1px solid #d8e0db;border-radius:10px;padding:0 11px;background:#fff}
+.stock-form .primary{margin-top:5px;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;font-weight:800}
+.stock-form .primary:disabled{opacity:.55;cursor:not-allowed}
+.required{color:#b42318;font-size:10px}
+.positive{color:#16803c;font-weight:800}
+.negative{color:#b42318;font-weight:800}
+.stock-transfer-grid{display:grid;grid-template-columns:minmax(300px,.7fr) minmax(0,1.3fr);gap:14px}
+.transfer-list{display:grid;gap:8px}
+.transfer-card{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px;border:1px solid #e2e8e4;border-radius:11px;background:#fff}
+.transfer-card>div:first-child{display:grid;gap:4px;min-width:0}
+.transfer-card strong{font-size:13px}
+.transfer-card span{font-size:9px;font-weight:800;color:#16803c}
+.transfer-card small{color:#748078;font-size:10px}
+.transfer-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.transfer-actions button{border:1px solid #d7dfda;background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}
+.transfer-actions button:hover{border-color:#16803c;color:#16803c}
+.transfer-actions .danger{color:#a32626}
+@media(max-width:1000px){.stock-grid{grid-template-columns:repeat(2,1fr)}.stock-transfer-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.stock-grid{grid-template-columns:1fr 1fr}.stock-branch-select{width:100%;margin-top:14px}.transfer-card{display:grid}.transfer-actions{justify-content:flex-start}}
