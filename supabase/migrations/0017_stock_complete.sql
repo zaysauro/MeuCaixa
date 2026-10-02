@@ -488,18 +488,18 @@ BEFORE INSERT ON public.sale_items
 FOR EACH ROW EXECUTE FUNCTION public.apply_branch_average_cost_to_sale_item();
 
 CREATE OR REPLACE FUNCTION public.recalculate_sale_cost()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql AS $
 DECLARE v_sale uuid;
 BEGIN
- v_sale:=COALESCE(NEW.sale_id,OLD.sale_id);
+ IF TG_OP='DELETE' THEN v_sale:=OLD.sale_id; ELSE v_sale:=NEW.sale_id; END IF;
  UPDATE public.sales s
  SET total_cost=COALESCE(x.total_cost,0),
      gross_profit=ROUND(s.total-COALESCE(x.total_cost,0),2)
  FROM (SELECT sale_id,SUM(total_cost) total_cost FROM public.sale_items
        WHERE sale_id=v_sale GROUP BY sale_id) x
  WHERE s.id=v_sale;
- RETURN COALESCE(NEW,OLD);
-END; $$;
+ RETURN CASE WHEN TG_OP='DELETE' THEN OLD ELSE NEW END;
+END; $;
 
 DROP TRIGGER IF EXISTS sale_items_recalculate_sale_cost ON public.sale_items;
 CREATE TRIGGER sale_items_recalculate_sale_cost
