@@ -12,16 +12,35 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
+import { MobileMarketingNav } from "@/components/marketing/MobileMarketingNav";
+import { MarketingAnalytics } from "@/components/marketing/MarketingAnalytics";
+import {
+  CONTACT_MESSAGES,
+  contactFallback,
+  emailLink,
+  marketingContact,
+  whatsappLink,
+} from "@/lib/marketing/contact";
 
-const whatsappNumber =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") || "";
-const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "";
-
-const whatsappHref = whatsappNumber
-  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-      "Olá! Quero contratar o MeuCaixa por R$ 59,90/mês."
-    )}`
-  : "#contato";
+const { whatsappNumber, email: contactEmail } = marketingContact;
+const whatsappHref = whatsappLink(CONTACT_MESSAGES.hire);
+const trialHref = contactFallback(CONTACT_MESSAGES.trial);
+const asaasCheckoutUrl = process.env.NEXT_PUBLIC_ASAAS_CHECKOUT_URL?.trim() ?? "";
+const TRIAL_DAYS = ""; // TODO: confirmar a duração do teste antes de publicar.
+const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
+const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
+const FAQS = [
+  ["Posso testar antes de pagar?", "Entre em contato pelo botão de teste grátis. A equipe confirma a disponibilidade e orienta o próximo passo."],
+  ["Como pago?", "A contratação planejada aceita Pix, boleto ou cartão, com cobrança mensal. A forma disponível depende da configuração comercial."],
+  ["Tem fidelidade? Posso cancelar quando quiser?", "TODO: confirmar a política de cancelamento antes de publicar esta resposta."],
+  ["Funciona no celular e no computador do balcão?", "Sim. O MeuCaixa funciona pelo navegador; a experiência pode variar conforme o tamanho da tela."],
+  ["Funciona com leitor de código de barras?", "A câmera do celular é compatível com leitura de códigos. Leitor USB: confirmar compatibilidade específica."],
+  ["Emite nota fiscal?", "TODO: confirmar o estado atual da emissão fiscal. Não oferecemos essa promessa nesta página."],
+  ["Consigo importar meus produtos de uma planilha?", "TODO: confirmar se a importação está disponível no produto atual."],
+  ["Meus dados estão seguros?", "O sistema separa organizações e permissões com autenticação e políticas RLS no Supabase. Nenhuma solução deve ser descrita como risco zero."],
+  ["Quantos usuários e filiais posso ter?", "O plano base começa com uma empresa e os limites exibidos no sistema. Consulte a equipe para necessidades de múltiplas filiais."],
+  ["Quem me ajuda se eu tiver dificuldade?", "Fale diretamente com a equipe pelos canais de contato disponíveis nesta página."],
+] as const;
 
 function Feature({
   icon,
@@ -42,8 +61,19 @@ function Feature({
 }
 
 export default function Home() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "MeuCaixa",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    offers: { "@type": "Offer", price: "59.90", priceCurrency: "BRL", description: "Plano mensal por empresa" },
+    provider: { "@type": "Organization", name: "Kumo — Soluções em Tecnologia" },
+  };
   return (
     <main className="marketing-v2">
+      <MarketingAnalytics />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <header className="marketing-nav-v2">
         <Link href="/" className="marketing-brand-v2" aria-label="MeuCaixa">
           <img src="/kumo-logo.svg" alt="Kumo" />
@@ -55,12 +85,14 @@ export default function Home() {
         <nav className="marketing-nav-links">
           <a href="#recursos">Recursos</a>
           <a href="#preco">Preço</a>
+          <a href="#perguntas">Perguntas</a>
           <a href="#contato">Contato</a>
         </nav>
 
-        <Link href="/login" className="marketing-login-v2">
+        <Link href="/login" className="marketing-login-v2" data-track="login_click" data-position="menu">
           Acesso do cliente <ChevronRight size={16} />
         </Link>
+        <MobileMarketingNav />
       </header>
 
       <section className="hero-v2">
@@ -71,8 +103,8 @@ export default function Home() {
           </div>
 
           <h1>
-            Seu negócio no controle.
-            <span> Sem complicação.</span>
+            Venda, estoque e caixa em um só sistema.
+            <span> A partir de R$ 59,90 por mês.</span>
           </h1>
 
           <p className="hero-lead">
@@ -93,13 +125,16 @@ export default function Home() {
               <span>Para deixar a operação da sua empresa organizada.</span>
             </div>
           </div>
+          <p className="audience-note-v2"><strong>Pensado para:</strong> mercadinhos, lojas de roupas, papelarias, assistências e lanchonetes.</p>
 
           <div className="hero-actions-v2">
+            {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" className="button primary" data-track="checkout_click" data-position="hero">Assinar agora <ArrowRight size={17} /></a> : null}
             <a
               href={whatsappHref}
               target={whatsappNumber ? "_blank" : undefined}
               rel={whatsappNumber ? "noreferrer" : undefined}
               className="button primary hero-cta"
+              data-track="cta_whatsapp_click" data-position="hero"
             >
               <MessageCircle size={19} />
               Quero contratar
@@ -112,6 +147,9 @@ export default function Home() {
               Conhecer o sistema
             </a>
           </div>
+          <a className="marketing-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="hero">
+            Ainda está na dúvida? Entre em contato e solicite um teste grátis
+          </a>
 
           <div className="hero-trust">
             <span>
@@ -250,6 +288,12 @@ export default function Home() {
             title="Visão do negócio"
             text="Veja os principais números da operação em um painel simples, direto e fácil de entender."
           />
+          <Feature icon={<Zap />} title="Código de barras pela câmera" text="Encontre produtos usando a câmera do celular no fluxo de cadastro e venda." />
+          <Feature icon={<Mail />} title="Recibo em PDF" text="Prepare e exiba comprovantes da venda para o cliente." />
+          <Feature icon={<BarChart3 />} title="Relatórios" text="Consulte relatórios de vendas, caixa, estoque e financeiro." />
+          <Feature icon={<Boxes />} title="Múltiplas filiais" text="A arquitetura do sistema acompanha operações com mais de uma filial." />
+          <Feature icon={<ShieldCheck />} title="Permissões por perfil" text="Organize acessos para owner, admin, manager, cashier e employee." />
+          <Feature icon={<ArrowRight />} title="Atalhos no PDV" text="Use atalhos de teclado disponíveis para agilizar o atendimento." />
         </div>
       </section>
 
@@ -265,25 +309,25 @@ export default function Home() {
           <div className="workflow-list">
             <div>
               <span>01</span>
-              <strong>Cadastre seus produtos</strong>
-              <p>Preço, custo, estoque e informações essenciais.</p>
+              <strong>Fale com a gente ou peça o teste</strong>
+              <p>A equipe orienta o próximo passo sem prometer prazo ou duração.</p>
             </div>
             <div>
               <span>02</span>
-              <strong>Registre suas vendas</strong>
-              <p>PDV simples para o atendimento do dia a dia.</p>
+              <strong>Criamos o acesso da sua empresa</strong>
+              <p>Você recebe a orientação inicial para entrar no sistema.</p>
             </div>
             <div>
               <span>03</span>
-              <strong>Acompanhe o resultado</strong>
-              <p>Caixa, estoque e financeiro em um só lugar.</p>
+              <strong>Cadastre produtos e comece a vender</strong>
+              <p>PDV, estoque, caixa e financeiro no mesmo fluxo.</p>
             </div>
           </div>
         </div>
 
         <div className="workflow-card">
           <div className="workflow-card-top">
-            <span>Resumo do dia</span>
+            <span>Exemplo ilustrativo</span>
             <small>Hoje</small>
           </div>
           <div className="workflow-total">
@@ -296,7 +340,7 @@ export default function Home() {
           </div>
           <div className="workflow-progress">
             <span><i /></span>
-            <div><small>Operação do dia</small><b>84% acompanhado</b></div>
+            <div><small>Operação do dia</small><b>Resumo disponível</b></div>
           </div>
           <div className="workflow-row"><span>Produtos ativos</span><b>248</b></div>
           <div className="workflow-row"><span>Estoque baixo</span><b className="orange">7 itens</b></div>
@@ -329,8 +373,13 @@ export default function Home() {
               target={whatsappNumber ? "_blank" : undefined}
               rel={whatsappNumber ? "noreferrer" : undefined}
               className="button primary pricing-cta"
+              data-track="cta_whatsapp_click" data-position="preco"
             >
               Quero contratar <ArrowRight size={18} />
+            </a>
+            {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</a> : null}
+            <a className="pricing-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="preco">
+              Ainda está na dúvida? Entre em contato e solicite um teste grátis
             </a>
           </div>
 
@@ -343,10 +392,28 @@ export default function Home() {
               <li><Check size={18} /> Clientes e fornecedores</li>
               <li><Check size={18} /> Usuários e permissões</li>
               <li><Check size={18} /> Acesso pelo navegador</li>
+              {GUARANTEES.map((item) => <li key={item}><Check size={18} /> {item}</li>)}
             </ul>
+            {TRIAL_DAYS ? <p className="pricing-guarantee-note-v2">Teste de {TRIAL_DAYS} dias sob confirmação da equipe.</p> : null}
           </div>
         </div>
         <p className="pricing-footnote">R$ 59,90 por mês por empresa.</p>
+      </section>
+
+      <section className="faq-section-v2" id="perguntas">
+        <div className="section-heading-v2">
+          <span className="section-kicker">PERGUNTAS FREQUENTES</span>
+          <h2>Resposta direta antes de começar.</h2>
+        </div>
+        <div className="faq-list-v2">
+          {FAQS.map(([question, answer]) => (
+            <details key={question}>
+              <summary>{question}<ChevronRight size={17} /></summary>
+              <p>{answer}</p>
+            </details>
+          ))}
+        </div>
+        {SHOW_LAUNCH_PROGRAM ? <p className="launch-program-v2">Programa de lançamento: acompanhamento direto da equipe nos primeiros clientes.</p> : null}
       </section>
 
       <section className="contact-section-v2" id="contato">
@@ -358,33 +425,28 @@ export default function Home() {
               Fale com a Kumo para contratar o MeuCaixa. Nós criamos o acesso
               da sua empresa e você começa a usar.
             </p>
+            <a className="contact-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="rodape">
+              Ainda está na dúvida? Entre em contato e solicite um teste grátis
+            </a>
           </div>
           <div className="contact-actions-v2">
-            {whatsappNumber && (
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                className="button primary"
-              >
-                <MessageCircle size={19} /> Falar pelo WhatsApp
-              </a>
-            )}
-            {contactEmail && (
-              <a
-                href={`mailto:${contactEmail}?subject=Quero contratar o MeuCaixa`}
-                className="button secondary"
-              >
-                <Mail size={19} /> {contactEmail}
-              </a>
-            )}
+            {whatsappNumber ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="button primary"><MessageCircle size={19} /> Falar pelo WhatsApp</a> : null}
+            {contactEmail ? <a href={emailLink(CONTACT_MESSAGES.hire)} className="button secondary"><Mail size={19} /> {contactEmail}</a> : null}
+            {!whatsappNumber && !contactEmail ? <span className="contact-config-note-v2">Contato em configuração. Fale com a equipe pelo acesso do cliente.</span> : null}
           </div>
         </div>
       </section>
 
+      <div className="marketing-mobile-cta-v2" aria-label="Contato rápido">
+        <a href={whatsappNumber ? whatsappHref : emailLink(CONTACT_MESSAGES.hire)} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined}><MessageCircle size={16} /> {whatsappNumber ? "Falar no WhatsApp" : "Falar com a equipe"}</a>
+        <a href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined}>Teste grátis</a>
+        {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" data-track="checkout_click" data-position="barra mobile">Assinar agora</a> : null}
+      </div>
+
       <footer className="marketing-footer-v2">
         <span><b>Kumo</b> · Soluções em Tecnologia</span>
         <span>MeuCaixa · Gestão simples para pequenos negócios</span>
+        <span><Link href="/privacidade">Privacidade</Link> · <Link href="/termos">Termos</Link></span>
       </footer>
     </main>
   );
