@@ -31,9 +31,12 @@ export default async function DashboardPage({
     branch_code: string;
     is_headquarters: boolean;
   }>;
+  const role = String(org[0].role || "operator");
+  const canSwitch = role === "owner" || role === "admin" || (role === "manager" && visibleBranches.length > 1);
+  const requestedBranch = canSwitch ? selectedBranchId : visibleBranches[0]?.branch_id;
 
   const selected =
-    visibleBranches.find((b) => b.branch_id === selectedBranchId) ??
+    visibleBranches.find((b) => b.branch_id === requestedBranch) ??
     null;
 
   const { data: summary } = await supabase.rpc("get_branch_dashboard_summary", {
@@ -74,7 +77,7 @@ export default async function DashboardPage({
           </p>
         </div>
 
-        <div className="branch-switcher">
+        {canSwitch && <div className="branch-switcher">
           <a
             className={!selected ? "branch-switcher-item active" : "branch-switcher-item"}
             href="/dashboard"
@@ -95,7 +98,7 @@ export default async function DashboardPage({
               {branch.branch_name}
             </a>
           ))}
-        </div>
+        </div>}
       </div>
 
       <div className="stats-row">
@@ -174,15 +177,6 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="panel">
-        <h2>Estrutura comercial</h2>
-        <p>
-          Plano base: <strong>R$ 59,90/mês</strong>. Cada filial adicional
-          poderá acrescentar <strong>R$ 50,00/mês</strong> à assinatura.
-          A cobrança ainda não é automática; esta etapa apenas prepara a
-          arquitetura para o faturamento por quantidade de unidades.
-        </p>
-      </div>
     </div>
   );
 }

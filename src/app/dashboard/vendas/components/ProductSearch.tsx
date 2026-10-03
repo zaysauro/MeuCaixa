@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { Barcode, Search } from "lucide-react";
 import { findProductByCode, searchProducts } from "@/lib/pos/products";
 import type { POSProduct } from "@/lib/pos/types";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 export type ProductSearchHandle = { focus: () => void };
 type Props = { branchId: string; onAdd: (product: POSProduct, quantity?: number) => void; onError: (message: string) => void };
@@ -20,6 +21,7 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<POSProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [camera, setCamera] = useState(false);
 
   useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }));
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -69,7 +71,7 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
             if (event.key === "Escape") { setQuery(""); setSuggestions([]); inputRef.current?.focus(); }
           }}
           placeholder="Código de barras, SKU ou nome do produto" autoComplete="off" aria-label="Buscar produto" />
-        <span className="pos-search-hint"><Barcode size={15} /> USB</span>
+        <button type="button" className="pos-search-hint" onClick={() => setCamera(true)} title="Ler com a câmera"><Barcode size={15} /> Câmera</button>
       </div>
       {(loading || suggestions.length > 0) && (
         <div className="pos-suggestions">
@@ -83,6 +85,7 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
           ))}
         </div>
       )}
+      {camera && <BarcodeScanner onClose={() => setCamera(false)} onDetected={(value) => { setCamera(false); setQuery(value); window.setTimeout(() => void handleEnter(), 0); }} />}
     </div>
   );
 });

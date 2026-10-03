@@ -43,6 +43,7 @@ export default async function ConfiguracoesPage() {
       </div>
 
       <div className="settings-hub">
+        {(["owner", "admin"].includes(role)) && <Link className="settings-hub-card" href="/dashboard/configuracoes/upgrade"><span className="settings-hub-icon"><Building2 size={21} /></span><span><strong>Upgrade</strong><small>Consulte limites e a preparação para contratar mais unidades.</small></span><span className="settings-hub-arrow">→</span></Link>}
         {items.filter((item) => roleHasPermission(role, item.permission)).map((item) => {
           const Icon = item.icon;
           return (

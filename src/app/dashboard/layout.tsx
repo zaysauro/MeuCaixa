@@ -15,7 +15,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const role = String(org[0].role || "operator");
   const navItems = [
     ["Visão geral", "/dashboard"],
-    ["Matriz e filiais", "/dashboard/filiais"],
     ["Vendas / PDV", "/dashboard/vendas"],
     ["Produtos", "/dashboard/produtos"],
     ["Estoque", "/dashboard/estoque"],
@@ -25,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ["Fornecedores", "/dashboard/fornecedores"],
     ["Relatórios", "/dashboard/relatorios"],
     ["Configurações", "/dashboard/configuracoes"],
+    ...((role === "owner" || role === "admin") ? [["Upgrade", "/dashboard/configuracoes/upgrade"] as const] : []),
   ] as const;
 
   return (

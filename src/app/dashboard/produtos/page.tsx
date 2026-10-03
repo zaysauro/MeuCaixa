@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 type Product = {
   id: string;
@@ -14,6 +15,7 @@ type Product = {
   stock_quantity: number;
   minimum_stock: number;
   active: boolean;
+  supplier_id: string | null;
 };
 
 const UNITS = [
@@ -80,6 +82,7 @@ export default function ProductsPage() {
   const [editBarcode, setEditBarcode] = useState("");
   const [editUnit, setEditUnit] = useState("UN");
   const [editStock, setEditStock] = useState("");
+  const [scannerTarget, setScannerTarget] = useState<"new" | "edit" | null>(null);
   const supabase = createClient();
 
   async function load() {
@@ -91,7 +94,7 @@ export default function ProductsPage() {
       .eq("active", true)
       .order("name");
 
-    if (error) setMessage(error.message);
+    if (error) setMessage(error.code === "23505" || error.message.includes("product_barcode_already_exists") ? "Este código de barras já está cadastrado em outro produto." : error.message);
     else setProducts((data ?? []) as Product[]);
   }
 
@@ -183,7 +186,7 @@ export default function ProductsPage() {
       .eq("id", editing.id);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(error.code === "23505" || error.message.includes("product_barcode_already_exists") ? "Este código de barras já está cadastrado em outro produto." : error.message);
     } else {
       setEditing(null);
       await load();
@@ -268,10 +271,11 @@ export default function ProductsPage() {
             Código de barras
             <input
               className="field"
-              placeholder="Pode repetir entre produtos"
+              placeholder="Código único na empresa"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
             />
+            <button type="button" className="button secondary" onClick={() => setScannerTarget("new")}>Ler com câmera</button>
           </label>
 
           <label>
@@ -360,6 +364,7 @@ export default function ProductsPage() {
             <label>
               Código de barras
               <input className="field" value={editBarcode} onChange={(e) => setEditBarcode(e.target.value)} />
+              <button type="button" className="button secondary" onClick={() => setScannerTarget("edit")}>Ler com câmera</button>
             </label>
 
             <label>
@@ -460,6 +465,7 @@ export default function ProductsPage() {
           </table>
         </div>
       </div>
+      {scannerTarget && <BarcodeScanner onClose={() => setScannerTarget(null)} onDetected={(value) => { if (scannerTarget === "new") setBarcode(value); else setEditBarcode(value); setScannerTarget(null); }} />}
     </div>
   );
 }

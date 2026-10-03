@@ -18,11 +18,13 @@ export default function FiliaisPage() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [billing, setBilling] = useState<any>(null);
 
   async function load() {
     const { data, error } = await supabase.rpc("get_my_branches");
     if (error) setMessage(error.message);
     else setBranches((data ?? []) as Branch[]);
+    const status = await supabase.rpc("get_my_billing_status"); setBilling(status.data?.[0] ?? null);
   }
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function FiliaisPage() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(error.message === "branch_limit_reached" ? "Seu plano atual permite apenas a matriz. Acesse Configurações > Upgrade para acompanhar a expansão." : error.message);
     } else {
       setName("");
       setCode("");
@@ -66,7 +68,10 @@ export default function FiliaisPage() {
         </div>
       </div>
 
-      {canManage && (
+      {canManage && billing?.branch_count >= billing?.branch_limit && (
+        <div className="panel"><h2>Mais unidades</h2><p>O limite atual foi atingido. A criação só será liberada após uma contratação confirmada.</p><a className="button secondary" href="/dashboard/configuracoes/upgrade">Ver Upgrade</a></div>
+      )}
+      {canManage && billing?.branch_count < billing?.branch_limit && (
         <div className="panel">
           <h2>Adicionar filial</h2>
           <p>

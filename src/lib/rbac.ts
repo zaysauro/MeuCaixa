@@ -112,6 +112,7 @@ export function canAccessRoute(role: string | null | undefined, route: string) {
     ["/dashboard/relatorios", "reports.view"],
     ["/dashboard/configuracoes/usuarios", "users.view"],
     ["/dashboard/configuracoes/comprovante", "settings.receipt"],
+    ["/dashboard/configuracoes/upgrade", "billing.view"],
     ["/dashboard/configuracoes", "settings.view"],
   ];
 
