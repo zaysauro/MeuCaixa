@@ -44,6 +44,7 @@ REVOKE EXECUTE ON FUNCTION public.ensure_product_branch_stock() FROM authenticat
 REVOKE EXECUTE ON FUNCTION public.finance_refresh_overdue() FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.handle_new_user_profile() FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.next_sale_number(uuid) FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM authenticated;
 
 DROP POLICY IF EXISTS "authenticated can read role permissions"
   ON public.role_permissions;
