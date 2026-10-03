@@ -8,7 +8,6 @@ type Props = { onDetected: (value: string) => void; onClose: () => void };
 
 export default function BarcodeScanner({ onDetected, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const lastValueRef = useRef("");
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
@@ -20,8 +19,6 @@ export default function BarcodeScanner({ onDetected, onClose }: Props) {
   function stop() {
     controlsRef.current?.stop();
     controlsRef.current = null;
-    readerRef.current?.reset();
-    readerRef.current = null;
     const stream = videoRef.current?.srcObject as MediaStream | null;
     stream?.getTracks().forEach((track) => track.stop());
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -33,7 +30,6 @@ export default function BarcodeScanner({ onDetected, onClose }: Props) {
     setStatus("Aponte o código de barras para a área de leitura.");
     try {
       const reader = new BrowserMultiFormatReader();
-      readerRef.current = reader;
       const devices = await BrowserMultiFormatReader.listVideoInputDevices();
       setCameras(devices);
       const selected = deviceId || devices.find((device) => /back|rear|environment|trás/i.test(device.label))?.deviceId || devices[0]?.deviceId;
