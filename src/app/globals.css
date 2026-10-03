@@ -739,11 +739,11 @@ select.field{appearance:auto}
 .barcode-scanner-modal{width:min(620px,100%);background:#fff;border-radius:17px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.25);display:grid;gap:14px}
 .barcode-scanner-modal .modal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
 .barcode-scanner-modal .modal-head h2{margin:0 0 4px}.barcode-scanner-modal .modal-head p{margin:0;color:#66736b;font-size:12px}
-.barcode-camera-frame{position:relative;overflow:hidden;background:#101713;border-radius:12px;min-height:260px;display:grid;place-items:center}
-.barcode-camera-frame video{display:block;width:100%;min-height:260px;max-height:380px;object-fit:cover}
+.barcode-camera-frame{position:relative;overflow:hidden;background:#101713;border-radius:12px;min-height:260px;aspect-ratio:4/3;display:grid;place-items:center}
+.barcode-camera-frame video{display:block;width:100%;height:100%;min-height:260px;max-height:380px;object-fit:cover}
 .barcode-scan-line{position:absolute;width:78%;height:28%;border:2px solid #65d58a;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.25);pointer-events:none}
 .barcode-diagnostics{font-size:11px;color:#748078;margin:0}.barcode-detected{display:grid;gap:8px;padding:13px;border:1px solid #bfe4ca;background:#f1fbf3;border-radius:10px}.barcode-detected strong{color:#16803c}.barcode-detected code{font-size:20px;letter-spacing:.08em;color:#183323}.barcode-detected .modal-actions{display:flex;gap:8px;flex-wrap:wrap}
-@media(max-width:650px){.barcode-scanner-modal{padding:15px}.barcode-camera-frame,.barcode-camera-frame video{min-height:240px}.barcode-detected .modal-actions{display:grid;grid-template-columns:1fr}.barcode-detected .button{width:100%}}
+@media(max-width:650px){.barcode-scanner-modal{padding:15px}.barcode-camera-frame,.barcode-camera-frame video{min-height:240px}.barcode-detected .modal-actions{display:grid;grid-template-columns:1fr}.barcode-detected .button{width:100%}.barcode-open-camera{width:100%;min-height:46px}}
 .users-modal{width:min(590px,100%);background:#fff;border-radius:17px;padding:23px;box-shadow:0 30px 80px rgba(0,0,0,.25);display:grid;gap:17px}
 .users-modal-header{display:flex;justify-content:space-between;gap:15px}
 .users-modal-header h2{margin:4px 0 0}
