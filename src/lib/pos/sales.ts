@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import type {
   CartItem,
+  DiscountType,
   PaymentInput,
   POSCustomer,
   SaleItemInput,
@@ -11,22 +12,23 @@ function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+export type DiscountInput = { type: DiscountType; value: number };
+
+export function getDiscountAmount(base: number, discount: DiscountInput): number {
+  const safeBase = Math.max(roundMoney(base), 0);
+  const safeValue = Math.max(Number(discount.value) || 0, 0);
+  if (discount.type === "percent") return roundMoney(safeBase * Math.min(safeValue, 100) / 100);
+  if (discount.type === "amount") return roundMoney(Math.min(safeValue, safeBase));
+  return 0;
+}
+
 export function getCartItemSubtotal(item: CartItem): number {
   return roundMoney(item.product.sale_price * item.quantity);
 }
 
 export function getCartItemDiscount(item: CartItem): number {
   const subtotal = getCartItemSubtotal(item);
-
-  if (item.discountType === "percent") {
-    return roundMoney(subtotal * Math.min(Math.max(item.discountValue, 0), 100) / 100);
-  }
-
-  if (item.discountType === "amount") {
-    return roundMoney(Math.min(Math.max(item.discountValue, 0), subtotal));
-  }
-
-  return 0;
+  return getDiscountAmount(subtotal, { type: item.discountType, value: item.discountValue });
 }
 
 export function getCartItemTotal(item: CartItem): number {
@@ -35,7 +37,7 @@ export function getCartItemTotal(item: CartItem): number {
   );
 }
 
-export function getCartTotals(items: CartItem[], globalDiscount = 0) {
+export function getCartTotals(items: CartItem[], globalDiscount: DiscountInput = { type: "amount", value: 0 }) {
   const subtotal = roundMoney(
     items.reduce((sum, item) => sum + getCartItemSubtotal(item), 0)
   );
@@ -44,9 +46,7 @@ export function getCartTotals(items: CartItem[], globalDiscount = 0) {
     items.reduce((sum, item) => sum + getCartItemDiscount(item), 0)
   );
 
-  const safeGlobalDiscount = roundMoney(
-    Math.min(Math.max(globalDiscount, 0), Math.max(subtotal - itemDiscount, 0))
-  );
+  const safeGlobalDiscount = getDiscountAmount(Math.max(subtotal - itemDiscount, 0), globalDiscount);
 
   const total = roundMoney(
     Math.max(subtotal - itemDiscount - safeGlobalDiscount, 0)
@@ -138,10 +138,10 @@ export async function completePOSSale(params: {
   payments: PaymentInput[];
   customer?: POSCustomer | null;
   sellerUserId?: string | null;
-  globalDiscount?: number;
+  globalDiscount?: DiscountInput;
   requestKey?: string | null;
 }): Promise<SaleResult> {
-  const totals = getCartTotals(params.items, params.globalDiscount ?? 0);
+  const totals = getCartTotals(params.items, params.globalDiscount ?? { type: "amount", value: 0 });
 
   if (!params.items.length) {
     throw new Error("Adicione pelo menos um produto à venda.");

@@ -5,7 +5,8 @@ import type { POSCustomer } from "@/lib/pos/types";
 
 type Props = {
   subtotal: number;
-  discount: number;
+  itemDiscount: number;
+  globalDiscount: number;
   total: number;
   customer: POSCustomer | null;
   sellerName: string;
@@ -18,7 +19,8 @@ const money = (value: number) => "R$ " + value.toFixed(2).replace(".", ",");
 
 export default function SaleSummary({
   subtotal,
-  discount,
+  itemDiscount,
+  globalDiscount,
   total,
   customer,
   sellerName,
@@ -64,12 +66,8 @@ export default function SaleSummary({
           <strong>{money(subtotal)}</strong>
         </div>
 
-        <div>
-          <span>Descontos</span>
-          <button type="button" onClick={onDiscount}>
-            {money(discount)}
-          </button>
-        </div>
+        <div><span>Descontos nos produtos</span><strong>{money(itemDiscount)}</strong></div>
+        <div><span>Desconto no total</span><button type="button" onClick={onDiscount}>{money(globalDiscount)}</button></div>
 
         <div className="grand-total">
           <span>Total</span>

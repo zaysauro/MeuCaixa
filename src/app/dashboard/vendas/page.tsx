@@ -44,7 +44,8 @@ export default function VendasPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<POSCustomer | null>(null);
-  const [globalDiscount, setGlobalDiscount] = useState(0);
+  const [globalDiscountType, setGlobalDiscountType] = useState<"none" | "amount" | "percent">("none");
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,7 +71,7 @@ export default function VendasPage() {
   const [receiptActionLoading, setReceiptActionLoading] = useState(false);
   const saleRequestKey = useRef<string | null>(null);
 
-  const totals = useMemo(() => getCartTotals(cart, globalDiscount), [cart, globalDiscount]);
+  const totals = useMemo(() => getCartTotals(cart, { type: globalDiscountType, value: globalDiscountValue }), [cart, globalDiscountType, globalDiscountValue]);
 
   const loadHistoricalReceipt = useCallback(async () => {
     if (!searchReceipt) return;
@@ -227,7 +228,7 @@ export default function VendasPage() {
         payments: pendingPayments,
         customer,
         sellerUserId: seller?.user_id ?? null,
-        globalDiscount,
+        globalDiscount: { type: globalDiscountType, value: globalDiscountValue },
         requestKey: saleRequestKey.current ?? (saleRequestKey.current = crypto.randomUUID()),
       });
 
@@ -257,7 +258,8 @@ export default function VendasPage() {
       }
       setCart([]);
       setCustomer(null);
-      setGlobalDiscount(0);
+      setGlobalDiscountType("none");
+      setGlobalDiscountValue(0);
       setPendingPayments([]);
     } catch (err) {
       setConfirmOpen(false);
@@ -390,7 +392,8 @@ export default function VendasPage() {
     setBranchName(branch.branch_name);
     setCart([]);
     setCustomer(null);
-    setGlobalDiscount(0);
+    setGlobalDiscountType("none");
+    setGlobalDiscountValue(0);
     setError("");
     router.replace("/dashboard/vendas?branch=" + encodeURIComponent(id));
   }
@@ -517,7 +520,8 @@ export default function VendasPage() {
         <section className="pos-side">
           <SaleSummary
             subtotal={totals.subtotal}
-            discount={totals.discount}
+            itemDiscount={totals.itemDiscount}
+            globalDiscount={totals.globalDiscount}
             total={totals.total}
             customer={customer}
             sellerName={sellerName}
@@ -537,7 +541,7 @@ export default function VendasPage() {
 
       {sellerOpen && <SellerModal organizationId={organizationId} selectedId={seller?.user_id ?? null} onSelect={(selected) => { setSeller(selected); setSellerName(selected.full_name); }} onClose={() => setSellerOpen(false)} />}
       {customerOpen && <CustomerModal organizationId={organizationId} selected={customer} onSelect={setCustomer} onClose={() => setCustomerOpen(false)} />}
-      {globalDiscountOpen && <DiscountModal title="Desconto na venda" initialType="amount" initialValue={globalDiscount} maxAmount={Math.max(totals.subtotal - totals.itemDiscount, 0)} onClose={() => setGlobalDiscountOpen(false)} onConfirm={(type, value) => { setGlobalDiscount(type === "amount" ? value : (totals.subtotal - totals.itemDiscount) * value / 100); setGlobalDiscountOpen(false); }} />}
+      {globalDiscountOpen && <DiscountModal title="Desconto no total" initialType={globalDiscountType} initialValue={globalDiscountValue} maxAmount={Math.max(totals.subtotal - totals.itemDiscount, 0)} onClose={() => setGlobalDiscountOpen(false)} onConfirm={(type, value) => { setGlobalDiscountType(type); setGlobalDiscountValue(value); setGlobalDiscountOpen(false); }} />}
       {itemDiscount && <DiscountModal title={itemDiscount.product.name} initialType={itemDiscount.discountType} initialValue={itemDiscount.discountValue} maxAmount={itemDiscount.product.sale_price * itemDiscount.quantity} onClose={() => setItemDiscountId(null)} onConfirm={(type, value) => updateItemDiscount(itemDiscount.product.id, type, value)} />}
       {paymentOpen && <PaymentModal total={totals.total} onClose={() => setPaymentOpen(false)} onConfirm={handlePayment} />}
 
