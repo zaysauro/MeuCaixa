@@ -41,8 +41,8 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
     return () => window.clearTimeout(timer);
   }, [branchId, query, onError]);
 
-  async function handleEnter() {
-    const value = query.trim();
+  async function handleCode(rawValue: string) {
+    const value = rawValue.trim();
     if (!value) return;
     const parsed = parseScannerInput(value);
     setLoading(true);
@@ -60,6 +60,8 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
     } finally { setLoading(false); }
   }
 
+  function handleEnter() { void handleCode(query); }
+
   return (
     <div className="pos-search-wrap">
       <div className="pos-search-box">
@@ -67,7 +69,7 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
         <input ref={inputRef} value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") { event.preventDefault(); void handleEnter(); }
+            if (event.key === "Enter") { event.preventDefault(); handleEnter(); }
             if (event.key === "Escape") { setQuery(""); setSuggestions([]); inputRef.current?.focus(); }
           }}
           placeholder="Código de barras, SKU ou nome do produto" autoComplete="off" aria-label="Buscar produto" />
@@ -85,7 +87,7 @@ const ProductSearch = forwardRef<ProductSearchHandle, Props>(function ProductSea
           ))}
         </div>
       )}
-      {camera && <BarcodeScanner onClose={() => setCamera(false)} onDetected={(value) => { setCamera(false); setQuery(value); window.setTimeout(() => void handleEnter(), 0); }} />}
+      {camera && <BarcodeScanner onClose={() => setCamera(false)} onDetected={(value) => { setCamera(false); void handleCode(value); }} />}
     </div>
   );
 });

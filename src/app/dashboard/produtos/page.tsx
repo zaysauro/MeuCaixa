@@ -237,6 +237,22 @@ export default function ProductsPage() {
 
   const activeCount = useMemo(() => products.length, [products]);
 
+  async function handleScannerResult(value: string) {
+    setBarcode(value);
+    setMessage(`Código detectado: ${value}. Verificando cadastro...`);
+    const { data: org } = await supabase.rpc("get_my_organization");
+    const organizationId = org?.[0]?.organization_id;
+    if (!organizationId) return;
+    const { data: existing } = await supabase.from("products").select("id,name,sku,barcode,unit,cost_price,sale_price,stock_quantity,minimum_stock,active,supplier_id").eq("organization_id", organizationId).eq("active", true).ilike("barcode", value).maybeSingle();
+    if (existing) {
+      setDuplicateProduct(existing as Product);
+      setMessage(`Este código de barras já está cadastrado: ${existing.name}.`);
+    } else {
+      setDuplicateProduct(null);
+      setMessage(`Código detectado: ${value}. Este código ainda não está vinculado a um produto.`);
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -478,7 +494,7 @@ export default function ProductsPage() {
           </table>
         </div>
       </div>
-      {scannerTarget && <BarcodeScanner onClose={() => setScannerTarget(null)} onDetected={(value) => { if (scannerTarget === "new") setBarcode(value); else setEditBarcode(value); setScannerTarget(null); }} />}
+      {scannerTarget && <BarcodeScanner onClose={() => setScannerTarget(null)} onDetected={(value) => { setScannerTarget(null); if (scannerTarget === "new") void handleScannerResult(value); else setEditBarcode(value); }} />}
     </div>
   );
 }
