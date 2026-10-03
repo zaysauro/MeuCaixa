@@ -66,12 +66,12 @@ export default function ComprovanteSettingsPage() {
 
       const { data, error: settingsError } = await supabase
         .from("receipt_settings")
-        .select("width,footer_text,show_cnpj,show_address,show_seller,show_customer,auto_print")
+        .select("paper_width,footer_text,show_cnpj,show_address,show_seller,show_customer,auto_print")
         .eq("branch_id", selected.branch_id)
         .maybeSingle();
 
       if (settingsError) throw new Error(settingsError.message);
-      setSettings({ ...defaults, ...(data ?? {}) });
+      setSettings({ ...defaults, ...(data ? { ...data, width: data.paper_width } : {}) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível carregar as configurações.");
     } finally {
@@ -88,7 +88,7 @@ export default function ComprovanteSettingsPage() {
 
     const { data, error: settingsError } = await supabase
       .from("receipt_settings")
-      .select("width,footer_text,show_cnpj,show_address,show_seller,show_customer,auto_print")
+      .select("paper_width,footer_text,show_cnpj,show_address,show_seller,show_customer,auto_print")
       .eq("branch_id", id)
       .maybeSingle();
 
@@ -97,7 +97,7 @@ export default function ComprovanteSettingsPage() {
       return;
     }
 
-    setSettings({ ...defaults, ...(data ?? {}) });
+    setSettings({ ...defaults, ...(data ? { ...data, width: data.paper_width } : {}) });
   }
 
   async function save() {
@@ -118,7 +118,13 @@ export default function ComprovanteSettingsPage() {
           {
             organization_id: organizationId,
             branch_id: branchId,
-            ...settings,
+            paper_width: settings.width,
+            footer_text: settings.footer_text,
+            show_cnpj: settings.show_cnpj,
+            show_address: settings.show_address,
+            show_seller: settings.show_seller,
+            show_customer: settings.show_customer,
+            auto_print: settings.auto_print,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "branch_id" }

@@ -68,6 +68,7 @@ export default function VendasPage() {
   const [receiptError, setReceiptError] = useState("");
   const [receiptCopyLabel, setReceiptCopyLabel] = useState<"ORIGINAL" | "2ª VIA">("ORIGINAL");
   const [receiptActionLoading, setReceiptActionLoading] = useState(false);
+  const saleRequestKey = useRef<string | null>(null);
 
   const totals = useMemo(() => getCartTotals(cart, globalDiscount), [cart, globalDiscount]);
 
@@ -227,6 +228,7 @@ export default function VendasPage() {
         customer,
         sellerUserId: seller?.user_id ?? null,
         globalDiscount,
+        requestKey: saleRequestKey.current ?? (saleRequestKey.current = crypto.randomUUID()),
       });
 
       setCompleted({ ...result, payments: pendingPayments });
@@ -266,6 +268,7 @@ export default function VendasPage() {
   }
 
   function newSale() {
+    saleRequestKey.current = null;
     setCompleted(null);
     setReceipt(null);
     setReceiptError("");
@@ -494,12 +497,12 @@ export default function VendasPage() {
           >
             Histórico
           </button>
-          <div className="pos-branch-control">
+          {branches.length > 1 && <div className="pos-branch-control">
           <Store size={17} />
           <select value={branchId} onChange={(event) => changeBranch(event.target.value)}>
             {branches.map((branch) => <option key={branch.branch_id} value={branch.branch_id}>{branch.branch_name}</option>)}
           </select>
-          </div>
+          </div>}
         </div>
       </div>
 

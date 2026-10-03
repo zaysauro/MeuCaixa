@@ -83,6 +83,7 @@ export default function ProductsPage() {
   const [editUnit, setEditUnit] = useState("UN");
   const [editStock, setEditStock] = useState("");
   const [scannerTarget, setScannerTarget] = useState<"new" | "edit" | null>(null);
+  const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null);
   const supabase = createClient();
 
   async function load() {
@@ -116,6 +117,7 @@ export default function ProductsPage() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setDuplicateProduct(null);
 
     const { data: org } = await supabase.rpc("get_my_organization");
     const organization_id = org?.[0]?.organization_id;
@@ -124,6 +126,16 @@ export default function ProductsPage() {
       setMessage("Empresa não configurada.");
       setLoading(false);
       return;
+    }
+
+    if (barcode.trim()) {
+      const { data: existing } = await supabase.from("products").select("id,name,sku,barcode,unit,cost_price,sale_price,stock_quantity,minimum_stock,active,supplier_id").eq("organization_id", organization_id).eq("active", true).ilike("barcode", barcode.trim()).maybeSingle();
+      if (existing) {
+        setDuplicateProduct(existing as Product);
+        setMessage("Este código já está vinculado a outro produto.");
+        setLoading(false);
+        return;
+      }
     }
 
     const { error } = await supabase.from("products").insert({
@@ -335,6 +347,7 @@ export default function ProductsPage() {
         </form>
 
         {message && <div className={message.includes("sucesso") || message.includes("preservado") || message.includes("atualizado") ? "success" : "error"}>{message}</div>}
+        {duplicateProduct && <div className="product-form-action"><button type="button" className="button secondary" onClick={() => startEdit(duplicateProduct)}>Abrir produto existente</button><a className="button secondary" href="/dashboard/estoque">Adicionar estoque</a></div>}
       </div>
 
       {editing && (

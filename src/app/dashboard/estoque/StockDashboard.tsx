@@ -84,7 +84,8 @@ export default function StockDashboard(){
   {message&&<div className="stock-message">{message}</div>}
   <div className="stock-tabs">{[
    ["overview","Visão geral"],["kardex","Kardex"],["entry","Entrada"],["exit","Saída"],["inventory","Inventário"],["transfer","Transferências"]
-  ].map(([id,label])=><button key={id} className={tab===id?"active":""} onClick={()=>{setTab(id);clearForm()}}>{label}{id==="transfer"&&branches.length<2?" · Upgrade":""}</button>)}</div>
+  ].filter(([id])=>id!=="transfer"||branches.length>1).map(([id,label])=><button key={id} className={tab===id?"active":""} onClick={()=>{setTab(id);clearForm()}}>{label}</button>)}</div>
+  {!loading&&branches.length<2&&<div className="panel"><h2>Transferências entre lojas</h2><p>Recurso disponível em planos com múltiplas lojas.</p><a className="button secondary" href="/dashboard/configuracoes/upgrade">Conhecer planos</a></div>}
 
   {loading?<div className="panel"><p>Carregando estoque...</p></div>:<>
    {tab==="overview"&&<div className="stock-grid">

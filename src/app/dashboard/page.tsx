@@ -32,7 +32,7 @@ export default async function DashboardPage({
     is_headquarters: boolean;
   }>;
   const role = String(org[0].role || "operator");
-  const canSwitch = role === "owner" || role === "admin" || (role === "manager" && visibleBranches.length > 1);
+  const canSwitch = visibleBranches.length > 1 && (role === "owner" || role === "admin" || role === "manager");
   const requestedBranch = canSwitch ? selectedBranchId : visibleBranches[0]?.branch_id;
 
   const selected =

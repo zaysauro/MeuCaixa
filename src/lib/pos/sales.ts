@@ -139,6 +139,7 @@ export async function completePOSSale(params: {
   customer?: POSCustomer | null;
   sellerUserId?: string | null;
   globalDiscount?: number;
+  requestKey?: string | null;
 }): Promise<SaleResult> {
   const totals = getCartTotals(params.items, params.globalDiscount ?? 0);
 
@@ -189,6 +190,7 @@ export async function completePOSSale(params: {
     })),
     p_customer_id: params.customer?.id ?? null,
     p_seller_user_id: params.sellerUserId ?? null,
+    p_request_key: params.requestKey ?? null,
   });
 
   if (error) {
