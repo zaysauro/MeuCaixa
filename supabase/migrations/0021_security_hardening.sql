@@ -38,6 +38,13 @@ GRANT EXECUTE ON FUNCTION public.report_allowed_branches(uuid, uuid) TO authenti
 GRANT EXECUTE ON FUNCTION public.search_pos_customers(uuid, text, integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.search_pos_products(uuid, text, integer) TO authenticated;
 
+REVOKE EXECUTE ON FUNCTION public.create_default_organization_settings() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.ensure_branch_product_stock() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.ensure_product_branch_stock() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.finance_refresh_overdue() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user_profile() FROM authenticated;
+REVOKE EXECUTE ON FUNCTION public.next_sale_number(uuid) FROM authenticated;
+
 DROP POLICY IF EXISTS "authenticated can read role permissions"
   ON public.role_permissions;
 
