@@ -85,6 +85,8 @@ CREATE INDEX IF NOT EXISTS financial_transactions_paid_idx
 -- 2. HELPER: FILIAIS QUE O USUÁRIO REALMENTE PODE VER
 -- ============================================================
 
+DROP FUNCTION IF EXISTS public.report_allowed_branches(uuid, uuid);
+
 CREATE OR REPLACE FUNCTION public.report_allowed_branches(
   p_organization_id uuid,
   p_branch_id uuid DEFAULT NULL
@@ -1177,7 +1179,7 @@ LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_today_start timestamptz;
   v_today_end timestamptz;
@@ -1248,7 +1250,7 @@ BEGIN
     )
   ORDER BY b.is_headquarters DESC, b.created_at, b.name;
 END;
-$;
+$$;
 
 GRANT EXECUTE ON FUNCTION public.get_branch_dashboard_summary(uuid)
 TO authenticated;

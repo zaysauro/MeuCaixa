@@ -111,6 +111,9 @@ ALTER TABLE public.finance_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.finance_settlements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.finance_recurring_templates ENABLE ROW LEVEL SECURITY;
 
+CREATE UNIQUE INDEX IF NOT EXISTS finance_categories_org_name_uidx
+  ON public.finance_categories (organization_id, name);
+
 -- Default categories. Idempotent and editable by the company later.
 INSERT INTO public.finance_categories (organization_id, name, kind)
 SELECT o.id, x.name, x.kind
@@ -154,7 +157,7 @@ SELECT
   END,
   ft.id,
   ft.created_at,
-  ft.user_id,
+  ft.created_by,
   ft.created_at
 FROM public.financial_transactions ft
 LEFT JOIN public.finance_categories fc
@@ -715,6 +718,9 @@ END;
 $$;
 
 -- New granular permissions. Keep old finance.* permissions intact.
+ALTER TABLE public.permissions
+  ALTER COLUMN name SET DEFAULT '';
+
 INSERT INTO public.permissions (key,module,description) VALUES
   ('finance.payable.create','finance','Criar conta a pagar'),
   ('finance.payable.pay','finance','Baixar conta a pagar'),
@@ -730,16 +736,23 @@ INSERT INTO public.permissions (key,module,description) VALUES
   ('finance.recurring.manage','finance','Gerenciar lançamentos recorrentes')
 ON CONFLICT (key) DO UPDATE SET description=EXCLUDED.description,module=EXCLUDED.module;
 
+UPDATE public.permissions
+SET name = key
+WHERE name IS NULL OR name = '';
+
+ALTER TABLE public.permissions
+  ALTER COLUMN name DROP DEFAULT;
+
 -- Owner/admin inherit all new finance permissions. Manager gets operational finance.
 INSERT INTO public.role_permissions(role,permission_key)
-SELECT r.role, p.key
+SELECT r.role::public.member_role, p.key
 FROM (VALUES ('owner'),('admin')) r(role)
 CROSS JOIN public.permissions p
 WHERE p.key LIKE 'finance.%'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.role_permissions(role,permission_key)
-SELECT 'manager', p.key
+SELECT 'manager'::public.member_role, p.key
 FROM public.permissions p
 WHERE p.key IN (
   'finance.view','finance.create','finance.pay','finance.export',

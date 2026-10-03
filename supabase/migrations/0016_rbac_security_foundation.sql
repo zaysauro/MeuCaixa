@@ -71,6 +71,10 @@ USING (true);
 
 GRANT SELECT ON public.permissions TO authenticated;
 
+-- Compatibilidade com o catálogo legado, que exige um nome separado da chave.
+ALTER TABLE public.permissions
+  ALTER COLUMN name SET DEFAULT '';
+
 INSERT INTO public.permissions (key, module, description) VALUES
   ('sales.view', 'sales', 'Visualizar vendas'),
   ('sales.create', 'sales', 'Registrar vendas'),
@@ -163,6 +167,13 @@ SET
   module = EXCLUDED.module,
   description = EXCLUDED.description;
 
+UPDATE public.permissions
+SET name = key
+WHERE name IS NULL OR name = '';
+
+ALTER TABLE public.permissions
+  ALTER COLUMN name DROP DEFAULT;
+
 -- ============================================================
 -- 3. MATRIZ ROLE -> PERMISSION
 -- ============================================================
@@ -173,6 +184,22 @@ CREATE TABLE IF NOT EXISTS public.role_permissions (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (role, permission_key)
 );
+
+-- Migra o formato legado (uma linha por role com flags booleanas) para a
+-- matriz normalizada usada pelas policies e pelos helpers atuais.
+ALTER TABLE public.role_permissions
+  ADD COLUMN IF NOT EXISTS permission_key text;
+
+UPDATE public.role_permissions
+SET permission_key = 'legacy.' || role::text
+WHERE permission_key IS NULL;
+
+ALTER TABLE public.role_permissions
+  DROP CONSTRAINT IF EXISTS role_permissions_pkey;
+
+ALTER TABLE public.role_permissions
+  ADD CONSTRAINT role_permissions_pkey
+  PRIMARY KEY (role, permission_key);
 
 ALTER TABLE public.role_permissions ENABLE ROW LEVEL SECURITY;
 
@@ -189,7 +216,7 @@ GRANT SELECT ON public.role_permissions TO authenticated;
 
 -- Limpa somente o catálogo desta matriz. Não altera usuários.
 DELETE FROM public.role_permissions
-WHERE role IN ('owner', 'admin', 'manager', 'operator', 'cashier', 'employee');
+WHERE role IN ('owner', 'admin', 'manager', 'operator');
 
 -- OWNER: tudo.
 INSERT INTO public.role_permissions (role, permission_key)
@@ -285,38 +312,25 @@ INSERT INTO public.role_permissions (role, permission_key) VALUES
   ('operator','reports.view_branch')
 ON CONFLICT DO NOTHING;
 
--- Compatibilidade: usuários antigos continuam com o mesmo conjunto operacional.
-INSERT INTO public.role_permissions (role, permission_key)
-SELECT 'cashier', permission_key
-FROM public.role_permissions
-WHERE role = 'operator'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.role_permissions (role, permission_key)
-SELECT 'employee', permission_key
-FROM public.role_permissions
-WHERE role = 'operator'
-ON CONFLICT DO NOTHING;
-
 -- ============================================================
 -- HELPERS LEGADOS: respeitam active e preservam as assinaturas atuais
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION public.is_organization_member(org_id uuid)
+CREATE OR REPLACE FUNCTION public.is_organization_member(p_organization_id uuid)
 RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.organization_members om
-    WHERE om.organization_id = org_id
+    WHERE om.organization_id = p_organization_id
       AND om.user_id = auth.uid()
       AND om.active = true
   );
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.is_organization_member(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_organization_member(uuid) TO authenticated;
@@ -327,7 +341,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.organization_members om
@@ -336,7 +350,7 @@ AS $
       AND om.active = true
       AND om.role::text IN ('owner', 'admin')
   );
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.is_organization_admin(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_organization_admin(uuid) TO authenticated;
@@ -354,7 +368,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.organization_members om
@@ -363,7 +377,7 @@ AS $
       AND om.active = true
       AND om.role::text = 'owner'
   );
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.is_owner(uuid, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_owner(uuid, uuid) TO authenticated;
@@ -377,12 +391,12 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.organization_members om
     JOIN public.role_permissions rp
-      ON rp.role = om.role::text
+      ON rp.role::text = om.role::text
      AND rp.permission_key = p_permission_key
     WHERE om.user_id = auth.uid()
       AND om.active = true
@@ -391,7 +405,7 @@ AS $
         OR om.organization_id = p_organization_id
       )
   );
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.has_permission(text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.has_permission(text, uuid) TO authenticated;
@@ -587,7 +601,7 @@ AS $$
     SELECT 1
     FROM public.organization_members om
     JOIN public.role_permissions rp
-      ON rp.role = om.role::text
+      ON rp.role::text = om.role::text
      AND rp.permission_key = p_permission_key
     WHERE om.user_id = auth.uid()
       AND om.active = true
@@ -898,7 +912,7 @@ BEGIN
    AND om.user_id = usc.user_id
    AND om.active = true
   JOIN public.role_permissions rp
-    ON rp.role = om.role::text
+    ON rp.role::text = om.role::text
    AND rp.permission_key = p_permission_key
   WHERE usc.organization_id = p_organization_id
     AND usc.credential_type = 'sensitive_pin'
@@ -956,7 +970,7 @@ GRANT EXECUTE ON FUNCTION public.authorize_sensitive_operation(uuid, text, text)
 
 CREATE UNIQUE INDEX IF NOT EXISTS organization_one_active_owner_idx
   ON public.organization_members(organization_id)
-  WHERE active = true AND role::text = 'owner';
+  WHERE active = true AND role = 'owner'::public.member_role;
 
 CREATE OR REPLACE FUNCTION public.prevent_invalid_owner_change()
 RETURNS trigger

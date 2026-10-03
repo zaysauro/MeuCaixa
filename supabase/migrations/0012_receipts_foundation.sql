@@ -84,26 +84,24 @@ ALTER TABLE public.sales
 -- Preenche vendas antigas sem inventar dados.
 UPDATE public.sales s
 SET
-  organization_name_snapshot = COALESCE(s.organization_name_snapshot, o.name),
-  branch_name_snapshot = COALESCE(s.branch_name_snapshot, b.name),
-  branch_code_snapshot = COALESCE(s.branch_code_snapshot, b.code),
-  branch_address_snapshot = COALESCE(s.branch_address_snapshot, b.address_line),
-  branch_city_snapshot = COALESCE(s.branch_city_snapshot, b.city),
-  branch_state_snapshot = COALESCE(s.branch_state_snapshot, b.state),
-  branch_zip_snapshot = COALESCE(s.branch_zip_snapshot, b.zip_code),
-  branch_phone_snapshot = COALESCE(s.branch_phone_snapshot, b.phone),
+  organization_name_snapshot = COALESCE(s.organization_name_snapshot, (SELECT o.name FROM public.organizations o WHERE o.id = s.organization_id)),
+  branch_name_snapshot = COALESCE(s.branch_name_snapshot, (SELECT b.name FROM public.branches b WHERE b.id = s.branch_id)),
+  branch_code_snapshot = COALESCE(s.branch_code_snapshot, (SELECT b.code FROM public.branches b WHERE b.id = s.branch_id)),
+  branch_address_snapshot = COALESCE(
+    s.branch_address_snapshot,
+    (SELECT NULLIF(concat_ws(', ', b.address, b.address_number, b.address_complement, b.neighborhood), '') FROM public.branches b WHERE b.id = s.branch_id)
+  ),
+  branch_city_snapshot = COALESCE(s.branch_city_snapshot, (SELECT b.city FROM public.branches b WHERE b.id = s.branch_id)),
+  branch_state_snapshot = COALESCE(s.branch_state_snapshot, (SELECT b.state FROM public.branches b WHERE b.id = s.branch_id)),
+  branch_zip_snapshot = COALESCE(s.branch_zip_snapshot, (SELECT b.postal_code FROM public.branches b WHERE b.id = s.branch_id)),
+  branch_phone_snapshot = COALESCE(s.branch_phone_snapshot, (SELECT o.phone FROM public.organizations o WHERE o.id = s.organization_id)),
   seller_name_snapshot = COALESCE(
     s.seller_name_snapshot,
-    NULLIF(trim(p.full_name), '')
+    (SELECT NULLIF(trim(p.full_name), '') FROM public.profiles p WHERE p.id = s.created_by)
   ),
-  customer_name_snapshot = COALESCE(s.customer_name_snapshot, c.name),
-  customer_document_snapshot = COALESCE(s.customer_document_snapshot, c.document),
-  customer_phone_snapshot = COALESCE(s.customer_phone_snapshot, c.phone)
-FROM public.organizations o
-LEFT JOIN public.branches b ON b.id = s.branch_id
-LEFT JOIN public.profiles p ON p.id = s.user_id
-LEFT JOIN public.customers c ON c.id = s.customer_id
-WHERE o.id = s.organization_id;
+  customer_name_snapshot = COALESCE(s.customer_name_snapshot, (SELECT c.name FROM public.customers c WHERE c.id = s.customer_id)),
+  customer_document_snapshot = COALESCE(s.customer_document_snapshot, (SELECT c.document FROM public.customers c WHERE c.id = s.customer_id)),
+  customer_phone_snapshot = COALESCE(s.customer_phone_snapshot, (SELECT c.phone FROM public.customers c WHERE c.id = s.customer_id));
 
 ALTER TABLE public.sale_payments
   ADD COLUMN IF NOT EXISTS received_amount numeric(12,2),
@@ -179,10 +177,6 @@ USING (
     WHERE om.organization_id = receipt_settings.organization_id
       AND om.user_id = auth.uid()
       AND om.role IN ('owner', 'admin')
-      AND (
-        om.branch_id IS NULL
-        OR om.branch_id = receipt_settings.branch_id
-      )
   )
 )
 WITH CHECK (
@@ -192,10 +186,6 @@ WITH CHECK (
     WHERE om.organization_id = receipt_settings.organization_id
       AND om.user_id = auth.uid()
       AND om.role IN ('owner', 'admin')
-      AND (
-        om.branch_id IS NULL
-        OR om.branch_id = receipt_settings.branch_id
-      )
   )
 );
 
@@ -561,7 +551,7 @@ BEGIN
     branch_id,
     customer_id,
     cash_register_id,
-    user_id,
+    created_by,
     sale_number,
     subtotal,
     discount,
@@ -598,11 +588,11 @@ BEGIN
     v_org.name,
     v_branch.name,
     v_branch.code,
-    v_branch.address_line,
+    NULLIF(concat_ws(', ', v_branch.address, v_branch.address_number, v_branch.address_complement, v_branch.neighborhood), ''),
     v_branch.city,
     v_branch.state,
-    v_branch.zip_code,
-    v_branch.phone,
+    v_branch.postal_code,
+    v_org.phone,
     v_seller_name,
     CASE WHEN v_customer.id IS NULL THEN NULL ELSE v_customer.name END,
     CASE WHEN v_customer.id IS NULL THEN NULL ELSE v_customer.document END,

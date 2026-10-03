@@ -32,7 +32,7 @@ INSERT INTO public.inventory_movements
 (organization_id,branch_id,product_id,type,quantity,previous_quantity,new_quantity,
  reference_id,notes,created_by,quantity_delta,unit_cost,balance_after,reason)
 SELECT
- ps.organization_id,ps.branch_id,ps.product_id,'initial_balance',
+ ps.organization_id,ps.branch_id,ps.product_id,'entry',
  GREATEST(ps.stock_quantity-COALESCE(x.delta_sum,0),0),
  0,
  GREATEST(ps.stock_quantity-COALESCE(x.delta_sum,0),0),
@@ -49,7 +49,7 @@ LEFT JOIN (
 WHERE NOT EXISTS (
  SELECT 1 FROM public.inventory_movements im
  WHERE im.branch_id=ps.branch_id AND im.product_id=ps.product_id
- AND im.type='initial_balance'
+ AND im.type='entry'
 );
 
 CREATE INDEX IF NOT EXISTS inventory_movements_kardex_idx
@@ -68,14 +68,14 @@ ON public.inventory_movements(supplier_id);
 CREATE OR REPLACE FUNCTION public.stock_entry(
  p_branch_id uuid,p_product_id uuid,p_quantity numeric,p_unit_cost numeric,
  p_reason text,p_supplier_id uuid
-) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE v_id uuid;
 BEGIN
  IF p_quantity<=0 OR COALESCE(p_unit_cost,0)<0 THEN RAISE EXCEPTION 'invalid_entry'; END IF;
  v_id:=public.post_stock_movement(p_branch_id,p_product_id,p_quantity,'entry',p_reason,NULL,p_unit_cost);
  UPDATE public.inventory_movements SET supplier_id=p_supplier_id WHERE id=v_id;
  RETURN v_id;
-END; $;
+END; $$;
 GRANT EXECUTE ON FUNCTION public.stock_entry(uuid,uuid,numeric,numeric,text,uuid) TO authenticated;
 
 -- Histórico de custo médio
@@ -469,7 +469,7 @@ GRANT EXECUTE ON FUNCTION public.cancel_stock_transfer(uuid,text) TO authenticat
 -- Cancelamento de venda com estorno de estoque, custo histórico e caixa.
 CREATE OR REPLACE FUNCTION public.cancel_sale(
  p_sale_id uuid,p_reason text
-) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE
  v_sale public.sales%ROWTYPE;
  i record;
@@ -503,7 +503,7 @@ BEGIN
  UPDATE public.sales
  SET status='cancelled'
  WHERE id=v_sale.id;
-END; $;
+END; $$;
 
 GRANT EXECUTE ON FUNCTION public.cancel_sale(uuid,text) TO authenticated;
 
@@ -549,7 +549,7 @@ BEFORE INSERT ON public.sale_items
 FOR EACH ROW EXECUTE FUNCTION public.apply_branch_average_cost_to_sale_item();
 
 CREATE OR REPLACE FUNCTION public.recalculate_sale_cost()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE v_sale uuid;
 BEGIN
  IF TG_OP='DELETE' THEN v_sale:=OLD.sale_id; ELSE v_sale:=NEW.sale_id; END IF;
@@ -560,7 +560,7 @@ BEGIN
        WHERE sale_id=v_sale GROUP BY sale_id) x
  WHERE s.id=v_sale;
  RETURN CASE WHEN TG_OP='DELETE' THEN OLD ELSE NEW END;
-END; $;
+END; $$;
 
 DROP TRIGGER IF EXISTS sale_items_recalculate_sale_cost ON public.sale_items;
 CREATE TRIGGER sale_items_recalculate_sale_cost
