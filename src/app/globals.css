@@ -889,3 +889,16 @@ select.field{appearance:auto}
   .finance-search{min-width:0}
   .finance-category-grid{grid-template-columns:1fr}
 }
+
+/* Dashboard navigation state + stock attention banner */
+.sidebar nav a{position:relative;transition:background-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
+.sidebar nav a:hover{background:#1e2923;color:#fff;transform:translateX(3px)}
+.sidebar nav a.sidebar-nav-active{background:rgba(73,200,120,.14);color:#75dc9a;box-shadow:inset 3px 0 0 #49c878}
+.sidebar nav a.sidebar-nav-active:hover{background:rgba(73,200,120,.2);color:#9ae7b5}
+.stock-alert-banner{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;background:#fff8f7;border:1px solid rgba(180,35,24,.34);box-shadow:0 8px 24px rgba(180,35,24,.08);border-radius:16px;padding:20px 54px 20px 22px;margin-bottom:20px;text-decoration:none;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.stock-alert-banner:hover{border-color:rgba(180,35,24,.58);box-shadow:0 10px 30px rgba(180,35,24,.13);transform:translateY(-1px)}
+.stock-alert-banner strong{display:block;color:#8f1d16;font-size:16px;margin-bottom:5px}
+.stock-alert-banner p{color:#7a3a35;font-size:14px}
+.stock-alert-close{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(180,35,24,.22);background:rgba(255,255,255,.8);color:#a52a22;display:grid;place-items:center;cursor:pointer;transition:background .18s ease,transform .18s ease}
+.stock-alert-close:hover{background:#ffe8e5;transform:scale(1.06)}
+.stock-alert-close:disabled{opacity:.55;cursor:wait}
