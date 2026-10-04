@@ -935,3 +935,19 @@ select.field{appearance:auto}
 .support-actions{display:flex;gap:9px;flex-wrap:wrap}
 .support-actions .button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
 @media(max-width:700px){.support-card-heading{display:grid}.support-online{white-space:normal;width:fit-content}.support-actions{display:grid}.support-actions .button{width:100%}}
+
+/* Finance settlement dialog */
+.finance-settle-backdrop{z-index:1000;overflow-y:auto;overscroll-behavior:contain}
+.finance-modal{box-sizing:border-box;width:min(680px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;background:#fff;border:1px solid #dfe6e1;border-radius:18px;padding:22px;box-shadow:0 30px 90px rgba(9,15,11,.28);color:#18221c}
+.finance-modal .form-grid{margin-top:17px}
+.finance-modal .form-grid label{min-width:0}
+.finance-modal .form-grid input,.finance-modal .form-grid select{width:100%;box-sizing:border-box}
+.finance-modal .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid #edf0ee}
+.finance-modal-head .eyebrow{display:block;margin-bottom:4px}
+@media(max-width:650px){
+ .finance-settle-backdrop{padding:12px;align-items:end}
+ .finance-modal{width:100%;max-height:92vh;border-radius:18px 18px 10px 10px;padding:17px}
+ .finance-modal .form-grid{grid-template-columns:1fr}
+ .finance-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr}
+ .finance-modal .modal-actions .button{width:100%}
+}
