@@ -910,3 +910,17 @@ select.field{appearance:auto}
 .payment-row{gap:10px}
 .payment-remove{width:34px;height:34px;flex:0 0 34px;border-radius:9px;border:1px solid #e2e5e8;background:#fff;color:#667085;display:grid;place-items:center;cursor:pointer;transition:border-color .16s ease,color .16s ease,background .16s ease}
 .payment-remove:hover{border-color:#b42318;color:#b42318;background:#fff5f4}
+
+/* Receipt: merchant-first header + Kumo product signature */
+.receipt-store-name{display:block;font-size:18px;font-weight:950;letter-spacing:.035em;line-height:1.1;text-transform:uppercase;margin-bottom:3px;overflow-wrap:anywhere}
+.receipt-kumo-signature{text-align:center;display:grid;justify-items:center;gap:4px;margin:9px 0 6px}
+.receipt-kumo-lockup{display:flex;align-items:center;justify-content:center;gap:7px}
+.receipt-kumo-lockup img{width:28px;height:25px;object-fit:contain;filter:grayscale(1) contrast(1.5)}
+.receipt-kumo-lockup>div{display:grid;text-align:left;line-height:1}
+.receipt-kumo-lockup strong{font-family:Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:.055em}
+.receipt-kumo-lockup span{font-family:Arial,sans-serif;font-size:7px;margin-top:3px}
+.receipt-kumo-site{font-size:8px;letter-spacing:.02em}
+@media print{
+ .receipt-store-name{font-size:17px}
+ .receipt-kumo-lockup img{width:27px;height:24px}
+}
