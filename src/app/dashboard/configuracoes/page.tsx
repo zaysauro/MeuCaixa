@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Building2, FileText, ShieldCheck, Users } from "lucide-react";
+import { Building2, FileText, Mail, MessageCircle, ShieldCheck, Users } from "lucide-react";
 import { roleHasPermission, roleLabel } from "@/lib/rbac";
 
 const items = [
@@ -57,6 +57,17 @@ export default async function ConfiguracoesPage() {
             </Link>
           );
         })}
+
+        <section className="support-card">
+          <div className="support-card-heading">
+            <div><span className="eyebrow">SUPORTE KUMO</span><h2>Falar com o suporte</h2><p>Escolha como prefere falar com a nossa equipe.</p></div>
+            <span className="support-online"><i /> Suporte online: segunda a sexta, das 9h às 18h</span>
+          </div>
+          <div className="support-actions">
+            <a className="button secondary" href="mailto:kumosoftwares@gmail.com?subject=Suporte%20MeuCaixa"><Mail size={17}/> Por e-mail</a>
+            <a className="button primary" href="https://wa.me/5541997084653?text=Ol%C3%A1%2C%20preciso%20de%20suporte%20com%20o%20MeuCaixa." target="_blank" rel="noreferrer"><MessageCircle size={17}/> Por WhatsApp</a>
+          </div>
+        </section>
 
         <div className="settings-hub-card settings-hub-card-muted">
           <span className="settings-hub-icon"><Building2 size={21} /></span>
