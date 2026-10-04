@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Smartphone, X } from "lucide-react";
 import type { PaymentInput, PaymentMethod } from "@/lib/pos/types";
 import { validatePayments } from "@/lib/pos/sales";
 
@@ -25,8 +25,27 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
   useEffect(() => { const timer = window.setTimeout(() => document.getElementById("payment-amount-0")?.focus(), 0); return () => window.clearTimeout(timer); }, []);
 
   function chooseMethod(method: PaymentMethod) {
+    setError("");
+    if (payments.some((payment) => payment.method === method)) return;
     if (payments.length === 1 && payments[0].amount === total && payments[0].method === "pix") { setPayments([{ method, amount: total }]); return; }
     setPayments((current) => [...current, { method, amount: Math.max(total - current.reduce((s, p) => s + Number(p.amount), 0), 0) }]);
+  }
+
+  function removePayment(index: number) {
+    setError("");
+    setPayments((current) => {
+      const removed = current[index];
+      const next = current.filter((_, i) => i !== index);
+      if (removed?.method === "cash") setCashReceived("");
+      if (!next.length) return [];
+      const paidNow = next.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+      const missing = Math.max(total - paidNow, 0);
+      if (missing > 0) {
+        const last = next.length - 1;
+        return next.map((payment, i) => i === last ? { ...payment, amount: Number(payment.amount || 0) + missing } : payment);
+      }
+      return next;
+    });
   }
 
   function updateAmount(index: number, value: string) {
@@ -35,7 +54,9 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
   }
 
   function confirm() {
-    const normalized = payments.map((payment) => payment.method === "cash" && cashReceived ? { ...payment, receivedAmount: Number(cashReceived.replace(",", ".")) } : payment);
+    const activePayments = payments.filter((payment) => Number(payment.amount || 0) > 0);
+    if (!activePayments.length) { setError("Adicione uma forma de pagamento."); return; }
+    const normalized = activePayments.map((payment) => payment.method === "cash" && cashReceived ? { ...payment, receivedAmount: Number(cashReceived.replace(",", ".")) } : payment);
     const result = validatePayments(normalized, total);
     if (!result.ok) { setError(result.message); return; }
     onConfirm(normalized);
@@ -45,11 +66,12 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
     <div className="pos-modal-backdrop" onMouseDown={onClose}><div className="pos-modal payment-modal" onMouseDown={(event) => event.stopPropagation()}>
       <div className="pos-modal-header"><div><span className="eyebrow">PAGAMENTO · F9</span><h2>Finalizar venda</h2></div><button type="button" className="modal-close" onClick={onClose}>×</button></div>
       <div className="payment-total">{money(total)}</div>
-      <div className="payment-methods">{methods.map((method) => <button key={method.id} type="button" onClick={() => chooseMethod(method.id)} className="payment-method">
+      <div className="payment-methods">{methods.map((method) => <button key={method.id} type="button" onClick={() => chooseMethod(method.id)} className={"payment-method "+(payments.some((payment)=>payment.method===method.id)?"payment-method-selected":"")}>
         {method.id === "cash" ? <Banknote size={17} /> : method.id === "pix" ? <Smartphone size={17} /> : <CreditCard size={17} />}{method.label}
       </button>)}</div>
       <div className="payment-list">{payments.map((payment, index) => <div className="payment-row" key={index}><strong>{methods.find((m) => m.id === payment.method)?.label}</strong>
-        <input id={"payment-amount-" + index} className="field payment-input" inputMode="decimal" value={String(payment.amount).replace(".", ",")} onChange={(event) => updateAmount(index, event.target.value)} /></div>)}</div>
+        <input id={"payment-amount-" + index} className="field payment-input" inputMode="decimal" value={String(payment.amount).replace(".", ",")} onChange={(event) => updateAmount(index, event.target.value)} />
+        <button type="button" className="payment-remove" onClick={()=>removePayment(index)} aria-label={"Remover pagamento "+(methods.find((m)=>m.id===payment.method)?.label??"")} title="Remover forma de pagamento"><X size={16}/></button></div>)}</div>
       {payments.some((payment) => payment.method === "cash") && <label>Dinheiro recebido<input className="field" inputMode="decimal" value={cashReceived} onChange={(event) => setCashReceived(event.target.value)} placeholder="Ex.: 100,00" /></label>}
       <div className="payment-status"><div><span>Falta</span><strong>{money(remaining)}</strong></div><div><span>Troco</span><strong>{money(change)}</strong></div></div>
       {error && <div className="error">{error}</div>}
