@@ -1,7 +1,7 @@
 const digitsOnly = (value: string | undefined) => value?.replace(/\D/g, "") ?? "";
 
 export const CONTACT_MESSAGES = {
-  hire: "Olá! Quero contratar o MeuCaixa por R$ 59,90/mês.",
+  hire: "Olá! Quero contratar o MeuCaixa a partir de R$ 79,99/mês.",
   trial: "Olá! Ainda estou na dúvida e quero solicitar um teste grátis do MeuCaixa.",
 } as const;
 

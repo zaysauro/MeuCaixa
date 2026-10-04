@@ -30,6 +30,12 @@ const TRIAL_DAYS = ""; // TODO: confirmar a duração do teste antes de publicar
 const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
 const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
 const FAQS = [
+  ["Quanto custa o MeuCaixa?", "R$ 79,99/mês para a operação inicial + R$ 50,00/mês por filial adicional."],
+  ["Posso começar com apenas uma loja?", "Sim. Comece com uma unidade e adicione outras quando sua empresa crescer."],
+  ["Posso adicionar outras lojas depois?", "Sim. A estrutura de matriz e filiais permite conectar novas unidades ao mesmo ecossistema."],
+  ["Posso comparar minhas lojas?", "Sim. A estrutura de filiais permite acompanhar e comparar o desempenho das unidades."],
+  ["Posso transferir produtos entre lojas?", "Sim. O módulo de estoque possui fluxo de transferência entre filiais."],
+  ["Preciso trocar de sistema quando abrir outra loja?", "Não. A proposta do MeuCaixa é acompanhar o crescimento da empresa dentro do mesmo ecossistema."],
   ["Posso testar antes de pagar?", "Entre em contato pelo botão de teste grátis. A equipe confirma a disponibilidade e orienta o próximo passo."],
   ["Como pago?", "A contratação planejada aceita Pix, boleto ou cartão, com cobrança mensal. A forma disponível depende da configuração comercial."],
   ["Tem fidelidade? Posso cancelar quando quiser?", "TODO: confirmar a política de cancelamento antes de publicar esta resposta."],
@@ -67,7 +73,7 @@ export default function Home() {
     name: "MeuCaixa",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
-    offers: { "@type": "Offer", price: "59.90", priceCurrency: "BRL", description: "Plano mensal por empresa" },
+    offers: { "@type": "Offer", price: "79.99", priceCurrency: "BRL", description: "Plano mensal por empresa" },
     provider: { "@type": "Organization", name: "Kumo — Soluções em Tecnologia" },
   };
   return (
@@ -104,25 +110,25 @@ export default function Home() {
 
           <h1>
             Venda, estoque e caixa em um só sistema.
-            <span> A partir de R$ 59,90 por mês.</span>
+            <span> A partir de R$ 79,99 por mês.</span>
           </h1>
 
           <p className="hero-lead">
-            Venda, controle o estoque, acompanhe o caixa e organize suas
-            finanças em um único sistema.
+            Venda, controle seu estoque, acompanhe o caixa e entenda o
+            desempenho do seu comércio em um só lugar.
           </p>
 
           <div className="hero-offer">
             <div className="hero-offer-price">
-              <small>por apenas</small>
+              <small>planos a partir de</small>
               <strong>
-                <sup>R$</sup>59,90
+                <sup>R$</sup>79,99
               </strong>
-              <span>por mês · por empresa</span>
+              <span>/mês · por empresa</span>
             </div>
             <div className="hero-offer-copy">
-              <strong>Menos de R$ 2 por dia.</strong>
-              <span>Para deixar a operação da sua empresa organizada.</span>
+              <strong>Comece com uma loja.</strong>
+              <span>Adicione filiais quando o seu comércio crescer.</span>
             </div>
           </div>
           <p className="audience-note-v2"><strong>Pensado para:</strong> mercadinhos, lojas de roupas, papelarias, assistências e lanchonetes.</p>
@@ -257,6 +263,25 @@ export default function Home() {
         <div><Wallet size={18} /> Controle financeiro</div>
       </section>
 
+      <section className="recognition-section-v2">
+        <div className="section-heading-v2">
+          <span className="section-kicker">PARA A ROTINA REAL</span>
+          <h2>Feito para a rotina do seu comércio.</h2>
+          <p>Se você vende no balcão, trabalha com estoque, código de barras e precisa saber se o caixa e a operação estão realmente batendo, o MeuCaixa foi feito para sua rotina.</p>
+        </div>
+        <div className="recognition-grid-v2">
+          <article><ShoppingCart size={21} /><h3>Vende no balcão?</h3><p>Caixa rápido e simples para sua operação.</p></article>
+          <article><Boxes size={21} /><h3>Trabalha com estoque?</h3><p>Saiba o que entrou, saiu e precisa de reposição.</p></article>
+          <article><BarChart3 size={21} /><h3>Quer entender seus números?</h3><p>Acompanhe vendas, custos e resultados com mais clareza.</p></article>
+          <article><ShieldCheck size={21} /><h3>Tem mais de uma loja?</h3><p>Conecte suas unidades e acompanhe tudo no mesmo sistema.</p></article>
+        </div>
+      </section>
+
+      <section className="pain-section-v2">
+        <div className="pain-copy-v2"><span className="section-kicker">MAIS CLAREZA NO DIA A DIA</span><h2>Chega de administrar sua loja no escuro.</h2><p>O pequeno comércio precisa de informação prática para decidir melhor, sem transformar cada resposta em uma busca por planilhas.</p></div>
+        <div className="pain-list-v2"><div>O estoque diz que tem, mas não tem.</div><div>Vendi bastante, mas não sei quanto realmente sobrou.</div><div>Preciso procurar em várias planilhas para descobrir uma informação.</div><div>Só consigo saber como a loja está quando estou lá.</div><strong>O MeuCaixa organiza essas informações em um só lugar para você tomar decisões com mais segurança.</strong></div>
+      </section>
+
       <section className="feature-section-v2" id="recursos">
         <div className="section-heading-v2">
           <span className="section-kicker">FEITO PARA A ROTINA REAL</span>
@@ -348,24 +373,29 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="growth-section-v2">
+        <div className="growth-copy-v2"><span className="section-kicker">CRESÇA SEM TROCAR DE SISTEMA</span><h2>Sua primeira loja não precisa ser seu limite.</h2><p>Comece com uma unidade e, quando seu negócio crescer, conecte novas lojas ao mesmo ecossistema. Você não precisa trocar de sistema quando sua empresa crescer.</p><a className="button secondary" href="#preco">Ver preço por filial</a></div>
+        <div className="network-map-v2" aria-label="Empresa com matriz e filiais conectadas"><strong>EMPRESA</strong><div className="network-line-v2" /><span>MATRIZ</span><div className="network-branches-v2"><span>FILIAL 1</span><span>FILIAL 2</span><span>FILIAL 3</span></div></div>
+        <div className="growth-benefits-v2"><div><strong>Preços centralizados</strong><span>Gerencie preços entre unidades com mais praticidade.</span></div><div><strong>Transferência entre lojas</strong><span>Transfira produtos e estoque quando necessário.</span></div><div><strong>Comparação de desempenho</strong><span>Entenda qual unidade está crescendo mais.</span></div><div><strong>Visão da rede</strong><span>Matriz e filiais dentro de um único ecossistema.</span></div></div>
+      </section>
+
       <section className="pricing-section-v2" id="preco">
         <div className="pricing-header-v2">
           <span className="section-kicker">PREÇO SEM PEGADINHA</span>
-          <h2>Um preço que cabe no pequeno negócio.</h2>
-          <p>Sem planos complicados. Sem escolher recurso por recurso.</p>
+          <h2>Comece pequeno. Cresça com o seu negócio.</h2>
+          <p>Uma base simples + R$ 50,00/mês por filial adicional.</p>
         </div>
 
         <div className="pricing-card-v2">
           <div className="pricing-main">
             <span className="pricing-label">MEUCAIXA</span>
-            <h3>Gestão completa para sua empresa.</h3>
+            <h3>Gestão para sua primeira loja e para as próximas.</h3>
             <p>
-              Tudo o que você precisa para começar a organizar sua operação
-              por um único preço mensal.
+              Organize vendas, estoque, caixa e gestão em um só lugar, com estrutura para acompanhar o crescimento do seu comércio.
             </p>
             <div className="pricing-price-v2">
               <sup>R$</sup>
-              <strong>59,90</strong>
+              <strong>79,99</strong>
               <span>/ mês</span>
             </div>
             <a
@@ -397,7 +427,13 @@ export default function Home() {
             {TRIAL_DAYS ? <p className="pricing-guarantee-note-v2">Teste de {TRIAL_DAYS} dias sob confirmação da equipe.</p> : null}
           </div>
         </div>
-        <p className="pricing-footnote">R$ 59,90 por mês por empresa.</p>
+        <div className="pricing-examples-v2" aria-label="Exemplos de preço por quantidade de lojas">
+          <div><strong>1 loja</strong><span>R$ 79,99/mês</span></div>
+          <div><strong>2 lojas</strong><span>R$ 129,99/mês</span></div>
+          <div><strong>3 lojas</strong><span>R$ 179,99/mês</span></div>
+          <div><strong>4 lojas</strong><span>R$ 229,99/mês</span></div>
+        </div>
+        <p className="pricing-footnote">R$ 79,99/mês + R$ 50,00/mês por filial adicional.</p>
       </section>
 
       <section className="faq-section-v2" id="perguntas">
@@ -420,10 +456,9 @@ export default function Home() {
         <div className="contact-card-v2">
           <div>
             <span className="section-kicker">PRONTO PARA COMEÇAR?</span>
-            <h2>Coloque seu negócio no controle.</h2>
+            <h2>Pronto para colocar seu comércio no controle?</h2>
             <p>
-              Fale com a Kumo para contratar o MeuCaixa. Nós criamos o acesso
-              da sua empresa e você começa a usar.
+              Comece por R$ 79,99/mês. Fale com a Kumo para conhecer o sistema e criar o acesso da sua empresa.
             </p>
             <a className="contact-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="rodape">
               Ainda está na dúvida? Entre em contato e solicite um teste grátis

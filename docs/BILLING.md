@@ -2,7 +2,7 @@
 
 ## Etapa A: link recorrente
 
-Crie no painel do Asaas um Link de Pagamento recorrente mensal de R$ 59,90 com `UNDEFINED` para permitir Pix, boleto ou cartão. Configure a URL em `NEXT_PUBLIC_ASAAS_CHECKOUT_URL`. Depois do pagamento, oriente o cliente a falar com a Kumo para receber o acesso enquanto `BILLING_ENABLED=false`.
+Crie no painel do Asaas um Link de Pagamento recorrente mensal de R$ 79,99 com `UNDEFINED` para permitir Pix, boleto ou cartão. Configure a URL em `NEXT_PUBLIC_ASAAS_CHECKOUT_URL`. Depois do pagamento, oriente o cliente a falar com a Kumo para receber o acesso enquanto `BILLING_ENABLED=false`.
 
 ## Etapa B: integração
 

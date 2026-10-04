@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
+import Link from "next/link";
+import { Upload } from "lucide-react";
 
 type Product = {
   id: string;
@@ -264,6 +266,7 @@ export default function ProductsPage() {
             unidades corretas.
           </p>
         </div>
+        <Link className="button secondary" href="/dashboard/produtos/importar"><Upload size={15} /> Importar CSV</Link>
       </div>
 
       <div className="panel">

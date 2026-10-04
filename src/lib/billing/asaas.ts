@@ -41,5 +41,5 @@ export function findAsaasSubscriptions(externalReference: string) {
 }
 
 export function createAsaasSubscription(input: { customer: string; externalReference: string }) {
-  return asaasRequest<AsaasSubscription>("/subscriptions", { method: "POST", body: JSON.stringify({ ...input, billingType: "UNDEFINED", value: 59.9, cycle: "MONTHLY", nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10), description: "Assinatura MeuCaixa" }) });
+  return asaasRequest<AsaasSubscription>("/subscriptions", { method: "POST", body: JSON.stringify({ ...input, billingType: "UNDEFINED", value: 79.99, cycle: "MONTHLY", nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10), description: "Assinatura MeuCaixa" }) });
 }

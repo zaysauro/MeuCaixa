@@ -10,7 +10,7 @@ export default function OpenGraphImage() {
       <div style={{ color: "#72d495", fontSize: 30, fontWeight: 700 }}>Kumo · MeuCaixa</div>
       <div style={{ fontSize: 72, fontWeight: 800, marginTop: 28 }}>Venda, estoque e caixa</div>
       <div style={{ fontSize: 42, color: "#dbe4de", marginTop: 12 }}>em um só sistema.</div>
-      <div style={{ fontSize: 28, color: "#aab5af", marginTop: 44 }}>A partir de R$ 59,90 por mês.</div>
+      <div style={{ fontSize: 28, color: "#aab5af", marginTop: 44 }}>A partir de R$ 79,99 por mês.</div>
     </div>,
     { ...size },
   );

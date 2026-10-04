@@ -1,11 +1,67 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, RefreshCw, WalletCards } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-const money=(v:number)=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-export default function CaixaPage(){
- const s=createClient(); const[org,setOrg]=useState<any>(null); const[summary,setSummary]=useState<any>(null); const[operators,setOperators]=useState<any[]>([]); const[operator,setOperator]=useState(""); const[opening,setOpening]=useState("0"); const[msg,setMsg]=useState(""); const[loading,setLoading]=useState(false);
- async function load(){const{data}=await s.rpc("get_my_organization");if(!data?.[0])return;setOrg(data[0]);const current=await s.rpc("get_cash_current_summary",{p_branch_id:data[0].branch_id});setSummary(current.data?.[0]??null);const members=await s.from("organization_members").select("user_id,role,profiles(full_name)").eq("organization_id",data[0].organization_id).eq("active",true);setOperators(members.data??[])}
- useEffect(()=>{void load()},[]);
- async function open(){setLoading(true);setMsg("");const{error}=await s.rpc("open_cash_register",{p_branch_id:org.branch_id,p_opening_balance:Number(opening)||0,p_operator_user_id:operator||null});if(error)setMsg(error.message);else await load();setLoading(false)}
- return <div className="page"><div className="page-header"><div><span className="eyebrow">OPERAÇÃO</span><h1>Caixa</h1><p>Abra, acompanhe e feche o caixa da sua unidade.</p></div></div>{!summary?<div className="panel"><h2>Abrir caixa</h2><p>Informe o dinheiro disponível no início do expediente.</p>{operators.length>1&&<label>Operador<select className="field" value={operator} onChange={e=>setOperator(e.target.value)}><option value="">Eu mesmo</option>{operators.map(x=><option key={x.user_id} value={x.user_id}>{x.profiles?.full_name||x.role}</option>)}</select></label>}<div className="inline-form"><input className="field" type="number" min="0" step=".01" value={opening} onChange={e=>setOpening(e.target.value)} placeholder="Saldo inicial"/><button className="button primary" onClick={open} disabled={loading}>{loading?"Abrindo...":"Abrir caixa"}</button></div>{msg&&<div className="error">{msg}</div>}</div>:<><div className="stats-row"><div className="stat-card"><small>Status</small><strong>Aberto</strong></div><div className="stat-card"><small>Vendas</small><strong>{money(summary.cash_sales)}</strong></div><div className="stat-card"><small>Entradas</small><strong>{money(summary.cash_entries)}</strong></div><div className="stat-card"><small>Saldo esperado</small><strong>{money(summary.expected_balance)}</strong></div></div><div className="panel"><h2>Caixa atual</h2><p>O caixa está vinculado à unidade <strong>{org?.branch_name}</strong>. As vendas feitas pelo PDV entram automaticamente aqui.</p></div></>}</div>;
+import { closeCashRegister, getCashHistory } from "@/lib/cash/closing";
+import { getCurrentCash, openCashRegister } from "@/lib/cash/cash";
+import { getCashMovements, registerCashMovement } from "@/lib/cash/movements";
+import type { CashHistoryItem, CashMovement, CashSummary } from "@/lib/cash/types";
+
+const money = (value: number) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dateTime = (value: string | null) => value ? new Date(value).toLocaleString("pt-BR") : "—";
+const movementLabels: Record<string, string> = { cash_in: "Entrada", supply: "Reforço", cash_out: "Saída", withdrawal: "Sangria", adjustment: "Ajuste", sale: "Venda", sale_reversal: "Estorno" };
+type Branch = { branch_id: string; branch_name: string };
+
+export default function CaixaPage() {
+  const supabase = createClient();
+  const [branch, setBranch] = useState<Branch | null>(null);
+  const [summary, setSummary] = useState<CashSummary | null>(null);
+  const [movements, setMovements] = useState<CashMovement[]>([]);
+  const [history, setHistory] = useState<CashHistoryItem[]>([]);
+  const [opening, setOpening] = useState("0");
+  const [counted, setCounted] = useState("");
+  const [observation, setObservation] = useState("");
+  const [movementType, setMovementType] = useState("cash_out");
+  const [movementAmount, setMovementAmount] = useState("");
+  const [movementDescription, setMovementDescription] = useState("");
+  const [historyStatus, setHistoryStatus] = useState<"" | "open" | "closed">("");
+  const [historyStart, setHistoryStart] = useState("");
+  const [historyEnd, setHistoryEnd] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  async function loadHistory(branchId?: string) {
+    try { setHistory(await getCashHistory({ branchId: branchId ?? null, status: historyStatus || null, startDate: historyStart || null, endDate: historyEnd || null })); }
+    catch (e) { setError(e instanceof Error ? e.message : "Não foi possível carregar o histórico do caixa."); }
+  }
+  async function load() {
+    setLoading(true); setError("");
+    const { data, error: orgError } = await supabase.rpc("get_my_organization");
+    const currentBranch = data?.[0] as Branch | undefined;
+    if (orgError || !currentBranch) { setError(orgError?.message || "Empresa não configurada."); setLoading(false); return; }
+    setBranch(currentBranch);
+    try { const current = await getCurrentCash(currentBranch.branch_id); setSummary(current); setMovements(current ? await getCashMovements(current.registerId) : []); await loadHistory(currentBranch.branch_id); }
+    catch (e) { setError(e instanceof Error ? e.message : "Não foi possível carregar o caixa."); }
+    setLoading(false);
+  }
+  useEffect(() => { void load(); }, []);
+  useEffect(() => { if (branch) void loadHistory(branch.branch_id); }, [historyStatus, historyStart, historyEnd]);
+  async function run(action: () => Promise<void>, success: string) { setBusy(true); setError(""); setMessage(""); try { await action(); setMessage(success); await load(); } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível concluir a operação."); } finally { setBusy(false); } }
+  function open() { if (!branch) return; return run(async () => { await openCashRegister(branch.branch_id, Number(opening.replace(",", ".")) || 0); }, "Caixa aberto com sucesso."); }
+  function addMovement() { if (!summary) return; const amount = Number(movementAmount.replace(",", ".")); if (!Number.isFinite(amount) || amount <= 0) { setError("Informe um valor de movimentação maior que zero."); return; } const type = movementType as "cash_in" | "cash_out" | "withdrawal" | "supply" | "adjustment"; return run(async () => { await registerCashMovement({ cashRegisterId: summary.registerId, type, amount, description: movementDescription }); setMovementAmount(""); setMovementDescription(""); }, "Movimentação registrada."); }
+  function close() { if (!summary) return; return run(async () => { await closeCashRegister(summary.registerId, Number(counted.replace(",", ".")), observation); setCounted(""); setObservation(""); }, "Caixa fechado com sucesso."); }
+  if (loading) return <div className="page"><div className="report-loading"><RefreshCw size={18} /> Carregando caixa...</div></div>;
+  return <div className="page">
+    <div className="page-header"><div><span className="eyebrow">OPERAÇÃO</span><h1>Caixa</h1><p>Abra, acompanhe e feche o caixa da unidade {branch?.branch_name}.</p></div><button className="button secondary" onClick={() => void load()} disabled={busy}><RefreshCw size={15} /> Atualizar</button></div>
+    {error && <div className="error">{error}</div>}{message && <div className="success">{message}</div>}
+    {!summary ? <div className="panel"><h2><WalletCards size={19} /> Abrir caixa</h2><p>Informe o dinheiro disponível no início do expediente.</p><div className="inline-form"><input className="field" type="number" min="0" step=".01" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="Saldo inicial" /><button className="button primary" onClick={() => void open()} disabled={busy}>Abrir caixa</button></div></div> : <>
+      <div className="stats-row"><div className="stat-card"><small>Status</small><strong>Aberto</strong></div><div className="stat-card"><small>Vendas em dinheiro</small><strong>{money(summary.cashSales)}</strong></div><div className="stat-card"><small>Entradas</small><strong>{money(summary.cashEntries)}</strong></div><div className="stat-card"><small>Saídas</small><strong>{money(summary.cashWithdrawals)}</strong></div><div className="stat-card"><small>Saldo esperado</small><strong>{money(summary.expectedBalance)}</strong></div></div>
+      <div className="two-column-panels"><div className="panel"><h2><ArrowUpFromLine size={19} /> Registrar movimentação</h2><div className="form-grid"><label>Tipo<select className="field" value={movementType} onChange={(e) => setMovementType(e.target.value)}><option value="cash_out">Saída</option><option value="withdrawal">Sangria</option><option value="cash_in">Entrada</option><option value="supply">Reforço</option><option value="adjustment">Ajuste</option></select></label><label>Valor<input className="field" type="number" min="0.01" step=".01" value={movementAmount} onChange={(e) => setMovementAmount(e.target.value)} /></label><label>Descrição<input className="field" value={movementDescription} onChange={(e) => setMovementDescription(e.target.value)} placeholder="Ex.: pagamento de fornecedor" /></label></div><button className="button primary" onClick={() => void addMovement()} disabled={busy}>Registrar</button></div><div className="panel"><h2><ArrowDownToLine size={19} /> Fechar caixa</h2><p>Esperado: <strong>{money(summary.expectedBalance)}</strong>. Informe a contagem física.</p><div className="form-grid"><label>Valor contado<input className="field" type="number" min="0" step=".01" value={counted} onChange={(e) => setCounted(e.target.value)} /></label><label>Observação<input className="field" value={observation} onChange={(e) => setObservation(e.target.value)} placeholder="Obrigatória se houver diferença" /></label></div><button className="button danger" onClick={() => void close()} disabled={busy || !counted}>Fechar caixa</button></div></div>
+      <div className="panel"><h2>Movimentações do caixa</h2>{movements.length ? <div className="report-table-wrap"><table className="report-table"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody>{movements.map((item) => <tr key={item.movement_id}><td>{dateTime(item.created_at)}</td><td>{movementLabels[item.type] ?? item.type}</td><td>{item.description || "—"}</td><td className={item.direction === -1 ? "report-attention" : ""}>{item.direction === -1 ? "−" : "+"}{money(item.amount)}</td></tr>)}</tbody></table></div> : <p>As vendas e movimentações aparecerão aqui.</p>}</div>
+    </>}
+    <div className="panel"><div className="report-section-header"><h2>Histórico de caixas</h2><div className="inline-form"><select className="field" value={historyStatus} onChange={(e) => setHistoryStatus(e.target.value as "" | "open" | "closed")}><option value="">Todos</option><option value="open">Abertos</option><option value="closed">Fechados</option></select><input className="field" type="date" value={historyStart} onChange={(e) => setHistoryStart(e.target.value)} /><input className="field" type="date" value={historyEnd} onChange={(e) => setHistoryEnd(e.target.value)} /></div></div>{history.length ? <div className="report-table-wrap"><table className="report-table"><thead><tr><th>Filial</th><th>Abertura</th><th>Fechamento</th><th>Status</th><th>Esperado</th><th>Contado</th><th>Diferença</th></tr></thead><tbody>{history.map((item) => <tr key={item.register_id}><td>{item.branch_name}</td><td>{dateTime(item.opened_at)}</td><td>{dateTime(item.closed_at)}</td><td>{item.status === "open" ? "Aberto" : "Fechado"}</td><td>{money(item.expected_balance ?? 0)}</td><td>{item.counted_balance === null ? "—" : money(item.counted_balance)}</td><td className={Number(item.difference) !== 0 ? "report-attention" : ""}>{item.difference === null ? "—" : money(item.difference)}</td></tr>)}</tbody></table></div> : <p>Nenhum caixa encontrado com os filtros atuais.</p>}</div>
+  </div>;
 }
