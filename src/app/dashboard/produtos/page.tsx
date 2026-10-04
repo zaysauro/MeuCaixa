@@ -73,6 +73,7 @@ export default function ProductsPage() {
   const [cost, setCost] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [minimumStock, setMinimumStock] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -84,6 +85,7 @@ export default function ProductsPage() {
   const [editBarcode, setEditBarcode] = useState("");
   const [editUnit, setEditUnit] = useState("UN");
   const [editStock, setEditStock] = useState("");
+  const [editMinimumStock, setEditMinimumStock] = useState("");
   const [scannerTarget, setScannerTarget] = useState<"new" | "edit" | null>(null);
   const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null);
   const supabase = createClient();
@@ -113,6 +115,7 @@ export default function ProductsPage() {
     setCost("");
     setPrice("");
     setStock("");
+    setMinimumStock("");
   }
 
   async function submit(e: FormEvent) {
@@ -149,6 +152,7 @@ export default function ProductsPage() {
       cost_price: moneyBR(cost),
       sale_price: moneyBR(price),
       stock_quantity: numberBR(stock),
+      minimum_stock: numberBR(minimumStock),
     });
 
     if (error) setMessage(error.message);
@@ -170,6 +174,7 @@ export default function ProductsPage() {
     setEditCost(formatInputMoney(product.cost_price));
     setEditPrice(formatInputMoney(product.sale_price));
     setEditStock(formatInputQuantity(product.stock_quantity));
+    setEditMinimumStock(formatInputQuantity(product.minimum_stock));
     setMessage("");
   }
 
@@ -196,6 +201,7 @@ export default function ProductsPage() {
         cost_price: moneyBR(editCost),
         sale_price: moneyBR(editPrice),
         stock_quantity: nextStock,
+        minimum_stock: numberBR(editMinimumStock),
       })
       .eq("id", editing.id);
 
@@ -358,6 +364,12 @@ export default function ProductsPage() {
             />
           </label>
 
+          <label>
+            Avisar quando estoque chegar a
+            <input className="field" inputMode="decimal" placeholder="Ex.: 5" value={minimumStock} onChange={(e) => setMinimumStock(e.target.value)} />
+            <small>Quando o saldo chegar neste valor ou abaixo, o sistema avisará que está na hora de repor.</small>
+          </label>
+
           <div className="product-form-action">
             <button className="button primary" disabled={loading}>
               {loading ? "Salvando..." : "Cadastrar produto"}
@@ -423,6 +435,12 @@ export default function ProductsPage() {
             <label>
               Estoque
               <input className="field" inputMode="decimal" value={editStock} onChange={(e) => setEditStock(e.target.value)} />
+            </label>
+
+            <label>
+              Avisar quando estoque chegar a
+              <input className="field" inputMode="decimal" value={editMinimumStock} onChange={(e) => setEditMinimumStock(e.target.value)} />
+              <small>Alerta de reposição deste produto.</small>
             </label>
 
             <div className="product-form-action">
