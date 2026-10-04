@@ -951,3 +951,9 @@ select.field{appearance:auto}
  .finance-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr}
  .finance-modal .modal-actions .button{width:100%}
 }
+
+/* Dashboard logout */
+.sidebar-logout-form{margin:10px 0 0;padding-top:10px;border-top:1px solid rgba(255,255,255,.09)}
+.sidebar-logout{width:100%;display:flex;align-items:center;gap:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#d7ded9;border-radius:9px;padding:10px 11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer;text-align:left;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
+.sidebar-logout:hover{background:rgba(190,55,55,.14);border-color:rgba(230,95,95,.32);color:#ffdede;transform:translateX(2px)}
+.sidebar-logout svg{flex:0 0 auto}
