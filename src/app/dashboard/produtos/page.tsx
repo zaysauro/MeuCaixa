@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import Link from "next/link";
@@ -65,6 +66,7 @@ const formatInputQuantity = (value: number) =>
   }).format(Number(value) || 0);
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
@@ -105,6 +107,8 @@ export default function ProductsPage() {
 
   useEffect(() => {
     load();
+    const incomingBarcode=searchParams.get("barcode");
+    if(incomingBarcode){setBarcode(incomingBarcode);setMessage("Código lido no estoque. Cadastre o novo produto para continuar.");}
   }, []);
 
   function resetForm() {
