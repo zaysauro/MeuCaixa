@@ -24,7 +24,10 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   center: { textAlign: "center" },
-  brand: { fontSize: 12, fontWeight: 700, marginBottom: 3 },
+  brand: { fontSize: 15, fontWeight: 700, marginBottom: 3 },
+  productBrand: { fontSize: 10, fontWeight: 700, marginTop: 2 },
+  productByline: { fontSize: 6, marginTop: 1 },
+  productSite: { fontSize: 7, marginTop: 3 },
   small: { fontSize: 7 },
   divider: {
     borderBottomWidth: 1,
@@ -76,8 +79,7 @@ function ReceiptPdfDocument({
     <Document title={"Comprovante #" + formatSaleNumber(receipt.sale.sale_number)}>
       <Page size={pageSize as never} style={styles}>
         <View style={styles.center}>
-          <Text style={styles.brand}>MEUCAIXA</Text>
-          {receipt.sale.organization_name && <Text>{receipt.sale.organization_name}</Text>}
+          {receipt.sale.organization_name && <Text style={styles.brand}>{receipt.sale.organization_name}</Text>}
           {receipt.sale.branch_name && <Text>{receipt.sale.branch_name}</Text>}
           {receipt.sale.branch_code && <Text>Unidade {receipt.sale.branch_code}</Text>}
           {receipt.settings.show_address && a && <Text>{a}</Text>}
@@ -176,6 +178,12 @@ function ReceiptPdfDocument({
           </>
         )}
 
+        <View style={styles.divider} />
+        <View style={styles.center}>
+          <Text style={styles.productBrand}>MEUCAIXA</Text>
+          <Text style={styles.productByline}>por Kumo</Text>
+          <Text style={styles.productSite}>www.sistemakumo.com.br</Text>
+        </View>
         <View style={styles.divider} />
         <Text style={styles.center}>{receipt.settings.footer_text || "Obrigado pela preferência!"}</Text>
         <Text style={[styles.center, styles.small]}>Documento sem valor fiscal</Text>
