@@ -37,8 +37,7 @@ export default function SaleReceipt({
       aria-label="Comprovante não fiscal"
     >
       <header className="receipt-header">
-        <div className="receipt-brand">MEUCAIXA</div>
-        {sale.organization_name && <strong>{sale.organization_name}</strong>}
+        {sale.organization_name && <strong className="receipt-store-name">{sale.organization_name}</strong>}
         {sale.branch_name && <div>{sale.branch_name}</div>}
         {sale.branch_code && <div>Unidade {sale.branch_code}</div>}
         {settings.show_address && address && <div>{address}</div>}
@@ -146,6 +145,13 @@ export default function SaleReceipt({
           </div>
         </>
       )}
+
+      <div className="receipt-divider" />
+
+      <div className="receipt-kumo-signature">
+        <div className="receipt-kumo-lockup"><img src="/kumo-logo.svg" alt="Kumo" /><div><strong>MEUCAIXA</strong><span>por Kumo</span></div></div>
+        <div className="receipt-kumo-site">www.sistemakumo.com.br</div>
+      </div>
 
       <div className="receipt-divider" />
 
