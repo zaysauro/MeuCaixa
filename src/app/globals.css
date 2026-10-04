@@ -902,3 +902,11 @@ select.field{appearance:auto}
 .stock-alert-close{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(180,35,24,.22);background:rgba(255,255,255,.8);color:#a52a22;display:grid;place-items:center;cursor:pointer;transition:background .18s ease,transform .18s ease}
 .stock-alert-close:hover{background:#ffe8e5;transform:scale(1.06)}
 .stock-alert-close:disabled{opacity:.55;cursor:wait}
+
+/* POS payment selection */
+.payment-method{transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease,transform .16s ease}
+.payment-method:hover{transform:translateY(-1px)}
+.payment-method.payment-method-selected{border-color:#16803c!important;background:rgba(22,128,60,.07)!important;box-shadow:0 0 0 2px rgba(22,128,60,.12);color:#166534}
+.payment-row{gap:10px}
+.payment-remove{width:34px;height:34px;flex:0 0 34px;border-radius:9px;border:1px solid #e2e5e8;background:#fff;color:#667085;display:grid;place-items:center;cursor:pointer;transition:border-color .16s ease,color .16s ease,background .16s ease}
+.payment-remove:hover{border-color:#b42318;color:#b42318;background:#fff5f4}
