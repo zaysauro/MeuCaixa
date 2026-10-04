@@ -116,7 +116,7 @@ export default function FinanceiroPage(){
   async function createEntry(e:FormEvent<HTMLFormElement>){
     e.preventDefault();setSaving(true);setError("");
     const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
-    const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:Number(f.get("amount")),p_due_date:String(f.get("due_date"))||null,p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
+    const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:Number(f.get("amount")),p_due_date:String(f.get("due_date"))||String(f.get("competence_date"))||today(),p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
     if(e2)setError(e2.message);else{setMsg("Lançamento criado.");e.currentTarget.reset();await load();}setSaving(false);
   }
 
