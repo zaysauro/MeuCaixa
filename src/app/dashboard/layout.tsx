@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CircleHelp } from "lucide-react";
 import { canAccessRoute } from "@/lib/rbac";
+import DashboardNav from "@/components/DashboardNav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -35,13 +36,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span className="meucaixa-brand-name">MeuCaixa</span>
         </Link>
 
-        <nav>
-          {navItems.map(([label, href]) =>
-            canAccessRoute(role, href) ? (
-              <Link href={href} key={href}>{label}</Link>
-            ) : null
-          )}
-        </nav>
+        <DashboardNav items={navItems.filter(([,href])=>canAccessRoute(role,href))} />
 
         <div className="sidebar-tools">
           <Link href="/dashboard/ajuda"><CircleHelp size={15} /> Ajuda</Link>
