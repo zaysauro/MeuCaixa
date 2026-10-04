@@ -45,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         <div className="sidebar-tools">
           <Link href="/dashboard/ajuda"><CircleHelp size={15} /> Ajuda</Link>
+          <a href="https://sistemakumo.com.br" target="_blank" rel="noreferrer">Kumo institucional ↗</a>
         </div>
 
         <div className="sidebar-footer">

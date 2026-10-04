@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://meucaixa.sistemakumo.com.br"),
   title: "MeuCaixa — sistema de PDV, estoque e caixa para pequenos negócios",
   description: "PDV, estoque, caixa e financeiro para pequenos negócios a partir de R$ 79,99/mês. Solicite um teste grátis falando com a equipe.",
   alternates: { canonical: "/" },
