@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { CircleHelp } from "lucide-react";
+import { CircleHelp, LogOut } from "lucide-react";
 import { canAccessRoute } from "@/lib/rbac";
 import DashboardNav from "@/components/DashboardNav";
 
@@ -46,8 +46,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="sidebar-footer">
           <small>{org[0].organization_name}</small>
           <small>{org[0].branch_name} · {role}</small>
-          <form action="/auth/signout" method="post">
-            <button>Sair</button>
+          <form action="/auth/signout" method="post" className="sidebar-logout-form">
+            <button type="submit" className="sidebar-logout"><LogOut size={16} /> <span>Sair do MeuCaixa</span></button>
           </form>
         </div>
       </aside>
