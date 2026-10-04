@@ -101,6 +101,8 @@ export default async function DashboardPage({
         </div>}
       </div>
 
+      {totalLowStock>0&&<a href="/dashboard/estoque" className="panel" style={{display:"block",textDecoration:"none"}}><strong>Atenção ao estoque</strong><p>{totalLowStock} produto(s) chegaram ao limite de reposição ou estão esgotados. Abra o Estoque para conferir o que precisa ser comprado.</p></a>}
+
       <div className="stats-row">
         <div className="stat-card">
           <small>Vendas hoje</small>
