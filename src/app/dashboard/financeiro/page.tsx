@@ -147,7 +147,7 @@ export default function FinanceiroPage(){
 
   async function createCategory(e:FormEvent<HTMLFormElement>){
     e.preventDefault();setSaving(true);setError("");const f=new FormData(e.currentTarget);
-    const {error:e2}=await supabase.rpc("finance_create_category",{p_organization_id:org,p_name:String(f.get("name")),p_kind:String(f.get("kind"))});
+    const {error:e2}=await supabase.rpc("finance_create_category",{p_organization_id:org,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_statement_group:null});
     if(e2)setError(e2.message);else{setMsg("Categoria criada.");setShowNewCategory(false);e.currentTarget.reset();await load();}setSaving(false);
   }
 
