@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import StockAlertBanner from "@/components/StockAlertBanner";
 
 const money = (v: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -63,6 +64,7 @@ export default async function DashboardPage({
     (n, r) => n + Number(r.low_stock_count),
     0
   );
+  const { data: stockAlerts } = await supabase.rpc("get_stock_alerts", { p_branch_id: selected?.branch_id ?? null });
 
   return (
     <div className="page">
@@ -101,7 +103,7 @@ export default async function DashboardPage({
         </div>}
       </div>
 
-      {totalLowStock>0&&<a href="/dashboard/estoque" className="panel" style={{display:"block",textDecoration:"none"}}><strong>Atenção ao estoque</strong><p>{totalLowStock} produto(s) chegaram ao limite de reposição ou estão esgotados. Abra o Estoque para conferir o que precisa ser comprado.</p></a>}
+      {stockAlerts?.length>0&&<StockAlertBanner alerts={stockAlerts} organizationId={org[0].organization_id} />}
 
       <div className="stats-row">
         <div className="stat-card">
