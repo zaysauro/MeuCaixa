@@ -62,7 +62,8 @@ export default function StockDashboard(){
  const byProduct=useMemo(()=>new Map(products.map(p=>[p.id,p])),[products]);
  const branchName=(id:string)=>branches.find(b=>b.branch_id===id)?.branch_name??"—";
  const rows=useMemo(()=>stock.map(s=>({...s,product:byProduct.get(s.product_id)})).filter(x=>x.product),[stock,byProduct]);
- const low=rows.filter(x=>Number(x.stock_quantity)<=Number(x.minimum_stock));
+ const low=rows.filter(x=>Number(x.minimum_stock)>0&&Number(x.stock_quantity)<=Number(x.minimum_stock));
+ const outOfStock=rows.filter(x=>Number(x.minimum_stock)>0&&Number(x.stock_quantity)<=0);
  const totalUnits=rows.reduce((a,x)=>a+Number(x.stock_quantity),0);
  const stockValue=rows.reduce((a,x)=>a+Number(x.stock_quantity)*Number(x.average_cost),0);
 
@@ -82,6 +83,7 @@ export default function StockDashboard(){
   </div>
 
   {message&&<div className="stock-message">{message}</div>}
+  {!loading&&low.length>0&&<div className="panel"><div className="panel-title"><div><h2>{outOfStock.length>0?"Atenção: produtos esgotados ou acabando":"Estoque baixo"}</h2><span>{low.length} produto(s) precisam de atenção nesta filial.</span></div></div><div className="finance-alert-grid">{low.slice(0,8).map(x=><div className={"finance-alert "+(Number(x.stock_quantity)<=0?"danger":"warning")} key={x.product_id}><div><b>{x.product!.name}</b><span>{Number(x.stock_quantity)<=0?"Produto esgotado. Talvez seja hora de fazer um pedido de mercadoria.":`Restam ${x.stock_quantity} ${x.product!.unit}. Você pediu para avisar com ${x.minimum_stock} ou menos.`}</span></div></div>)}</div>{low.length>8&&<p>+ {low.length-8} produto(s) com estoque baixo. Veja a lista abaixo.</p>}</div>}
   <div className="stock-tabs">{[
    ["overview","Visão geral"],["kardex","Kardex"],["entry","Entrada"],["exit","Saída"],["inventory","Inventário"],["transfer","Transferências"]
   ].filter(([id])=>id!=="transfer"||branches.length>1).map(([id,label])=><button key={id} className={tab===id?"active":""} onClick={()=>{setTab(id);clearForm()}}>{label}</button>)}</div>
