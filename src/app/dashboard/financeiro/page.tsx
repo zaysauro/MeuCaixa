@@ -13,6 +13,8 @@ type Account = { id:string; name:string; kind:string; opening_balance:number; op
 type Category = { id:string; name:string; kind:string };
 type Recurring = { id:string; description:string; amount:number; frequency:string; next_due_date:string; entry_type:string; active:boolean; branch_id:string|null };
 type FlowRow = { day:string; sales:number; settlements:number; projected_receipts:number; projected_payables:number; net:number; accumulated_balance?:number };
+type Statement = { sales:number;cogs:number;gross_profit:number;other_income:number;operating_expenses:number;taxes:number;payroll:number;occupancy:number;utilities:number;marketing:number;financial_expenses:number;other_expenses:number;net_result:number;net_margin:number;health:"healthy"|"red"|"neutral";open_payable:number;open_receivable:number;cash_balance:number;projected_balance:number;previous_result:number;result_change:number };
+type BranchPerformance = { branch_id:string;branch_name:string;is_headquarters:boolean;sales:number;cogs:number;expenses:number;net_result:number };
 
 const brl=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n||0);
 const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date());
@@ -33,6 +35,8 @@ export default function FinanceiroPage(){
   const [flow,setFlow]=useState<FlowRow[]>([]);
   const [totals,setTotals]=useState<Record<string,number>>({});
   const [summary,setSummary]=useState<Record<string,number>>({});
+  const [statement,setStatement]=useState<Statement|null>(null);
+  const [branchPerformance,setBranchPerformance]=useState<BranchPerformance[]>([]);
   const [tab,setTab]=useState<Tab>("overview");
   const [mode,setMode]=useState<Mode>("realized");
   const [branch,setBranch]=useState("");
@@ -59,7 +63,7 @@ export default function FinanceiroPage(){
     if(!id)return;
     setError(""); setMsg("");
     await supabase.rpc("finance_refresh_overdue",{p_organization_id:id,p_branch_id:branch||null});
-    const [b,c,a,e,f,s,sp,cu,r]=await Promise.all([
+    const [b,c,a,e,f,s,sp,cu,r,st,bp]=await Promise.all([
       supabase.rpc("get_my_branches"),
       supabase.from("finance_categories").select("id,name,kind").eq("organization_id",id).eq("active",true).order("name"),
       supabase.from("financial_accounts").select("id,name,kind,opening_balance,opening_balance_date").eq("organization_id",id).eq("active",true).order("name"),
@@ -68,7 +72,9 @@ export default function FinanceiroPage(){
       supabase.rpc("get_finance_summary",{p_organization_id:id,p_branch_id:branch||null,p_start:start,p_end:end}),
       supabase.from("suppliers").select("id,name").eq("organization_id",id).order("name"),
       supabase.from("customers").select("id,name").eq("organization_id",id).order("name"),
-      supabase.from("finance_recurring_templates").select("id,description,amount,frequency,next_due_date,entry_type,active,branch_id").eq("organization_id",id).order("next_due_date")
+      supabase.from("finance_recurring_templates").select("id,description,amount,frequency,next_due_date,entry_type,active,branch_id").eq("organization_id",id).order("next_due_date"),
+      supabase.rpc("get_finance_monthly_statement",{p_organization_id:id,p_branch_id:branch||null,p_month:start}),
+      supabase.rpc("get_finance_branch_performance",{p_organization_id:id,p_month:start})
     ]);
     if(b.error)setError(b.error.message);else setBranches((b.data||[]) as Branch[]);
     if(c.error)setError(c.error.message);else setCategories((c.data||[]) as Category[]);
@@ -79,6 +85,8 @@ export default function FinanceiroPage(){
     if(sp.error)setError(sp.error.message);else setSuppliers((sp.data||[]) as Person[]);
     if(cu.error)setError(cu.error.message);else setCustomers((cu.data||[]) as Person[]);
     if(r.error)setError(r.error.message);else setRecurring((r.data||[]) as Recurring[]);
+    if(st.error)setError(st.error.message);else setStatement(st.data as Statement);
+    if(bp.error)setError(bp.error.message);else setBranchPerformance((bp.data||[]) as BranchPerformance[]);
   }
 
   useEffect(()=>{(async()=>{const {data,error:e}=await supabase.rpc("get_my_organization");if(e||!data?.[0]){setError(e?.message||"Empresa não encontrada");setLoading(false);return;}setOrg(data[0].organization_id);await load(data[0].organization_id);setLoading(false);})();},[]);
@@ -101,7 +109,7 @@ export default function FinanceiroPage(){
   async function createEntry(e:FormEvent<HTMLFormElement>){
     e.preventDefault();setSaving(true);setError("");
     const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
-    const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:Number(f.get("amount")),p_due_date:String(f.get("due_date"))||null,p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null});
+    const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:Number(f.get("amount")),p_due_date:String(f.get("due_date"))||null,p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
     if(e2)setError(e2.message);else{setMsg("Lançamento criado.");e.currentTarget.reset();await load();}setSaving(false);
   }
 
@@ -163,6 +171,26 @@ export default function FinanceiroPage(){
     <div className="finance-tabs">{([["overview","Visão geral"],["payables","A pagar"],["receivables","A receber"],["new","Novo lançamento"],["recurring","Recorrências"],["categories","Categorias"],["accounts","Contas financeiras"]] as [Tab,string][]).map(([k,l])=><button key={k} className={tab===k?"active":""} onClick={()=>setTab(k)}>{l}</button>)}</div>
 
     {tab==="overview"&&<>
+      {statement&&<div className={"panel finance-health "+statement.health}>
+        <div className="panel-title"><div><span className="eyebrow">RESULTADO DO MÊS · COMPETÊNCIA</span><h2>{statement.health==="healthy"?"Mês saudável":statement.health==="red"?"Mês no vermelho":"Mês no zero"}</h2></div><strong>{brl(Number(statement.net_result))}</strong></div>
+        <div className="stats-row"><div className="stat-card"><small>Receita de vendas</small><strong>{brl(Number(statement.sales))}</strong></div><div className="stat-card"><small>Lucro bruto</small><strong>{brl(Number(statement.gross_profit))}</strong></div><div className="stat-card"><small>Margem líquida</small><strong>{Number(statement.net_margin).toFixed(1)}%</strong></div><div className="stat-card"><small>Saldo projetado</small><strong>{brl(Number(statement.projected_balance))}</strong></div></div>
+        <div className="table-wrap"><table><tbody>
+          <tr><td>Receita de vendas</td><td>{brl(Number(statement.sales))}</td></tr>
+          <tr><td>(-) Custo das mercadorias vendidas</td><td>{brl(-Number(statement.cogs))}</td></tr>
+          <tr><td><b>Lucro bruto</b></td><td><b>{brl(Number(statement.gross_profit))}</b></td></tr>
+          <tr><td>(+) Outras receitas</td><td>{brl(Number(statement.other_income))}</td></tr>
+          <tr><td>(-) Despesas operacionais</td><td>{brl(-Number(statement.operating_expenses))}</td></tr>
+          <tr><td>(-) Impostos</td><td>{brl(-Number(statement.taxes))}</td></tr>
+          <tr><td>(-) Pessoal</td><td>{brl(-Number(statement.payroll))}</td></tr>
+          <tr><td>(-) Ocupação / aluguel</td><td>{brl(-Number(statement.occupancy))}</td></tr>
+          <tr><td>(-) Água, energia e internet</td><td>{brl(-Number(statement.utilities))}</td></tr>
+          <tr><td>(-) Marketing</td><td>{brl(-Number(statement.marketing))}</td></tr>
+          <tr><td>(-) Despesas financeiras</td><td>{brl(-Number(statement.financial_expenses))}</td></tr>
+          <tr><td><b>Resultado líquido</b></td><td><b>{brl(Number(statement.net_result))}</b></td></tr>
+        </tbody></table></div>
+        <p>Caixa disponível: <b>{brl(Number(statement.cash_balance))}</b> · A receber: <b>{brl(Number(statement.open_receivable))}</b> · A pagar: <b>{brl(Number(statement.open_payable))}</b> · Variação contra o mês anterior: <b>{brl(Number(statement.result_change))}</b>.</p>
+      </div>}
+      {!branch&&branchPerformance.length>1&&<div className="panel"><div className="panel-title"><div><h2>Resultado por unidade</h2><span>Matriz e filiais no mesmo fechamento.</span></div></div><div className="table-wrap"><table><thead><tr><th>Unidade</th><th>Vendas</th><th>CMV</th><th>Despesas</th><th>Resultado</th></tr></thead><tbody>{branchPerformance.map(x=><tr key={x.branch_id}><td>{x.branch_name}{x.is_headquarters?" · Matriz":""}</td><td>{brl(Number(x.sales))}</td><td>{brl(Number(x.cogs))}</td><td>{brl(Number(x.expenses))}</td><td><b>{brl(Number(x.net_result))}</b></td></tr>)}</tbody></table></div></div>}
       <div className="finance-alert-grid"><div className="finance-alert danger"><AlertTriangle size={17}/><div><b>{brl(Number(summary.overdue_payable))}</b><span>A pagar vencido</span></div></div><div className="finance-alert warning"><CalendarClock size={17}/><div><b>{brl(Number(summary.overdue_receivable))}</b><span>A receber vencido</span></div></div><div className="finance-alert"><Wallet size={17}/><div><b>{brl(Number(summary.payable_open))}</b><span>Contas a pagar abertas</span></div></div><div className="finance-alert"><Wallet size={17}/><div><b>{brl(Number(summary.receivable_open))}</b><span>Contas a receber abertas</span></div></div></div>
       <div className="stats-row"><div className="stat-card"><small>Vendas recebidas</small><strong>{brl(Number(totals.sales))}</strong></div><div className="stat-card"><small>Recebido financeiro</small><strong>{brl(Number(summary.received_period))}</strong></div><div className="stat-card"><small>Pago financeiro</small><strong>{brl(Number(summary.paid_period))}</strong></div><div className="stat-card"><small>Variação</small><strong>{brl(Number(totals.net))}</strong></div></div>
       <div className="panel"><div className="panel-title"><div><h2>Movimentação diária</h2><span>{mode==="realized"?"Somente valores realizados":"Realizado + valores futuros por vencimento"}</span></div></div><div className="finance-chart">{flow.map((r,i)=><div className="finance-bar-col" key={r.day} title={r.day+" · "+brl(r.net)}><div className="finance-bar-wrap"><i style={{height:Math.max(5,Math.min(100,Math.abs(r.net)/(Math.max(...flow.map(x=>Math.abs(x.net)),1))*100))+"%"}}/></div><small>{i%5===0?new Date(r.day+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}):""}</small></div>)}</div><div className="table-wrap"><table><thead><tr><th>Data</th><th>Vendas</th><th>Financeiro</th><th>Receber</th><th>Pagar</th><th>Saldo acumulado</th><th>Variação</th></tr></thead><tbody>{flow.map(r=><tr key={r.day}><td>{new Date(r.day+"T12:00:00").toLocaleDateString("pt-BR")}</td><td>{brl(r.sales)}</td><td>{brl(r.settlements)}</td><td>{brl(r.projected_receipts)}</td><td>{brl(r.projected_payables)}</td><td>{brl(Number(r.accumulated_balance))}</td><td>{brl(r.net)}</td></tr>)}</tbody></table></div></div>
@@ -170,7 +198,7 @@ export default function FinanceiroPage(){
 
     {(tab==="payables"||tab==="receivables")&&<div className="panel"><div className="finance-list-head"><div><h2>{tab==="payables"?"Contas a pagar":"Contas a receber"}</h2><span>{(tab==="payables"?pay:rec).filter(e=>e.status==="overdue").length} vencida(s)</span></div><div className="finance-list-tools"><label className="finance-search"><Search size={15}/><input placeholder="Buscar descrição..." value={search} onChange={e=>setSearch(e.target.value)}/></label><select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="all">Todos os status</option><option value="open">Abertas</option><option value="partial">Parciais</option><option value="overdue">Vencidas</option><option value="paid">Pagas</option><option value="received">Recebidas</option><option value="cancelled">Canceladas</option></select><select value={originFilter} onChange={e=>setOriginFilter(e.target.value)}><option value="all">Todas as origens</option>{Object.entries(originLabels).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div></div><div className="table-wrap"><table><thead><tr><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Origem</th><th>Ação</th></tr></thead><tbody>{(tab==="payables"?pay:rec).map(e=><tr key={e.id}><td>{e.description}</td><td>{e.due_date?new Date(e.due_date+"T12:00:00").toLocaleDateString("pt-BR"):"—"}</td><td>{brl(Number(e.amount))}</td><td><span className={"finance-status "+e.status}>{labels[e.status]||e.status}</span></td><td>{originLabels[e.origin_type]||e.origin_type}</td><td className="finance-row-actions">{["open","partial","overdue"].includes(e.status)&&<button className="button small" onClick={()=>openSettlement(e)}>{e.entry_type==="payable"?"Baixar":"Receber"}</button>}{e.status!=="cancelled"&&e.origin_type!=="purchase"&&["open","overdue"].includes(e.status)&&<button className="button small danger-button" onClick={()=>cancelEntry(e)}>Cancelar</button>}{["paid","received"].includes(e.status)&&<button className="button small" onClick={()=>reverseEntry(e)}>Estornar última baixa</button>}</td></tr>)}{!(tab==="payables"?pay:rec).length&&<tr><td colSpan={6}>Nenhuma conta encontrada.</td></tr>}</tbody></table></div></div>}
 
-    {tab==="new"&&<div className="panel"><h2>Novo lançamento manual</h2><p>Use para fatos que não nasceram do PDV ou de uma compra. Venda paga não deve ser lançada novamente aqui.</p><form className="form-grid" onSubmit={createEntry}><label>Tipo<select name="entry_type"><option value="payable">Despesa / a pagar</option><option value="receivable">Receita / a receber</option></select></label><label>Filial<select name="branch_id" required><option value="">Selecione</option>{branches.map(b=><option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}</select></label><label>Descrição<input name="description" required/></label><label>Valor<input name="amount" type="number" min="0.01" step="0.01" required/></label><label>Vencimento<input name="due_date" type="date"/></label><label>Categoria<select name="category_id"><option value="">Sem categoria</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Fornecedor<select name="supplier_id"><option value="">Nenhum</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>Cliente<select name="customer_id"><option value="">Nenhum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><button className="button primary" disabled={saving}><Plus size={16}/> Criar</button></form></div>}
+    {tab==="new"&&<div className="panel"><h2>Novo lançamento manual</h2><p>Use para fatos que não nasceram do PDV ou de uma compra. Venda paga não deve ser lançada novamente aqui.</p><form className="form-grid" onSubmit={createEntry}><label>Tipo<select name="entry_type"><option value="payable">Despesa / a pagar</option><option value="receivable">Receita / a receber</option></select></label><label>Filial<select name="branch_id" required><option value="">Selecione</option>{branches.map(b=><option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}</select></label><label>Descrição<input name="description" required/></label><label>Valor<input name="amount" type="number" min="0.01" step="0.01" required/></label><label>Competência<input name="competence_date" type="date" defaultValue={today()} required/></label><label>Vencimento<input name="due_date" type="date"/></label><label>Categoria<select name="category_id"><option value="">Sem categoria</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Fornecedor<select name="supplier_id"><option value="">Nenhum</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label><label>Cliente<select name="customer_id"><option value="">Nenhum</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><button className="button primary" disabled={saving}><Plus size={16}/> Criar</button></form></div>}
 
     {tab==="recurring"&&<div className="panel"><div className="panel-title"><div><h2>Recorrências</h2><span>Gere contas futuras sem duplicar fatos.</span></div><button className="button primary" onClick={()=>setShowRecurring(true)}><Plus size={16}/> Nova recorrência</button></div><div className="table-wrap"><table><thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Frequência</th><th>Próximo vencimento</th><th>Status</th><th/></tr></thead><tbody>{recurring.map(t=><tr key={t.id}><td>{t.description}</td><td>{t.entry_type==="payable"?"A pagar":"A receber"}</td><td>{brl(Number(t.amount))}</td><td>{t.frequency==="monthly"?"Mensal":t.frequency==="weekly"?"Semanal":"Anual"}</td><td>{new Date(t.next_due_date+"T12:00:00").toLocaleDateString("pt-BR")}</td><td>{t.active?"Ativa":"Pausada"}</td><td><button className="button small" onClick={()=>toggleRecurring(t)}>{t.active?"Pausar":"Ativar"}</button></td></tr>)}{!recurring.length&&<tr><td colSpan={7}>Nenhuma recorrência cadastrada.</td></tr>}</tbody></table></div><div className="finance-recurring-generate"><button className="button" disabled={saving} onClick={async()=>{setSaving(true);const {error:e}=await supabase.rpc("finance_generate_recurring",{p_organization_id:org,p_until:end});if(e)setError(e.message);else{setMsg("Recorrências geradas.");await load();}setSaving(false)}}><CalendarClock size={16}/> Gerar até {new Date(end+"T12:00:00").toLocaleDateString("pt-BR")}</button></div></div>}
 
