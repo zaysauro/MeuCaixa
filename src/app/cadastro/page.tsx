@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function CadastroPage() {
+function CadastroForm() {
   const searchParams = useSearchParams();
   const subscribe = searchParams.get("mode") === "subscribe";
   const [loading, setLoading] = useState(false);
@@ -74,4 +74,8 @@ export default function CadastroPage() {
       </section>
     </main>
   );
+}
+
+export default function CadastroPage() {
+  return <Suspense fallback={null}><CadastroForm /></Suspense>;
 }
