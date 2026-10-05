@@ -393,10 +393,8 @@ export default function Home() {
             >
               Quero contratar <ArrowRight size={18} />
             </a>
-            {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</a> : null}
-            <a className="pricing-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="preco">
-              Ainda está na dúvida? Entre em contato e solicite um teste grátis
-            </a>
+            <Link href="/cadastro" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</Link>
+            <Link className="pricing-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="preco">Teste grátis por 7 dias</Link>
           </div>
 
           <div className="pricing-includes">
