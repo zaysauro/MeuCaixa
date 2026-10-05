@@ -18,7 +18,8 @@ import {
   marketingContact,
 } from "@/lib/marketing/contact";
 
-const { email: contactEmail } = marketingContact;
+const { whatsappNumber, email: contactEmail } = marketingContact;
+const whatsappHref = `https://wa.me/${whatsappNumber}`;
 const TRIAL_DAYS = "7";
 const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
 const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
