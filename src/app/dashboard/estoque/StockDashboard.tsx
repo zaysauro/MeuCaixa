@@ -91,7 +91,7 @@ export default function StockDashboard(){
  async function scanProduct(code:string){setScannerOpen(false);const p=products.find(x=>(x as any).barcode===code);if(p){setSelectedProduct(p.id);return;}window.location.href="/dashboard/produtos?barcode="+encodeURIComponent(code);}
 
 
- return <div className="stock-module">
+ return <div className="page stock-module">
   <div className="page-header">
    <div><span className="eyebrow">OPERAÇÃO</span><h1>Estoque</h1><p>Kardex, entradas, saídas, inventário e transferências entre filiais.</p></div>
    <select value={branchId} onChange={e=>setBranchId(e.target.value)} className="stock-branch-select">{branches.map(b=><option key={b.branch_id} value={b.branch_id}>{b.branch_name}{b.is_headquarters?" · Matriz":""}</option>)}</select>
