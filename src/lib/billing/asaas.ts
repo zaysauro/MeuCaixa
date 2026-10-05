@@ -18,37 +18,54 @@ async function asaasRequest<T>(path: string, init: RequestInit = {}) {
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
-      console.error("Asaas request failed", { path, status: response.status });
-      throw new AsaasError(response.status, "Não foi possível processar a cobrança agora.");
+      console.error("Asaas request failed", { path, status: response.status, body });
+      const description = Array.isArray((body as { errors?: { description?: string }[] })?.errors)
+        ? (body as { errors: { description?: string }[] }).errors.map((item) => item.description).filter(Boolean).join(" ")
+        : "";
+      throw new AsaasError(response.status, description || "Não foi possível processar a cobrança agora.");
     }
     return body as T;
   } catch (error) {
     if (error instanceof AsaasError) throw error;
-    console.error("Asaas request error", { path });
+    console.error("Asaas request error", { path, error });
     throw new AsaasError(502, "O serviço de cobrança está indisponível.");
   } finally { clearTimeout(timeout); }
 }
 
-export type AsaasCustomer = { id: string };
-export type AsaasSubscription = { id: string; invoiceUrl?: string; status?: string; billingType?: string; nextDueDate?: string };
+export type AsaasCheckout = { id: string; link?: string; status?: string; externalReference?: string };
 
-export function createAsaasCustomer(input: { name: string; cpfCnpj?: string | null; email?: string | null; externalReference: string }) {
-  return asaasRequest<AsaasCustomer>("/customers", { method: "POST", body: JSON.stringify(input) });
-}
-
-export function findAsaasSubscriptions(externalReference: string) {
-  return asaasRequest<{ data: AsaasSubscription[] }>(`/subscriptions?externalReference=${encodeURIComponent(externalReference)}&includeDeleted=false`);
-}
-
-export function createAsaasSubscription(input: { customer: string; externalReference: string; value: number }) {
-  return asaasRequest<AsaasSubscription>("/subscriptions", {
+export function createRecurringCheckout(input: {
+  externalReference: string;
+  value: number;
+  successUrl: string;
+  cancelUrl: string;
+  expiredUrl: string;
+  customerData?: { name?: string | null; email?: string | null; cpfCnpj?: string | null };
+}) {
+  const customerData = Object.fromEntries(Object.entries(input.customerData ?? {}).filter(([, value]) => Boolean(value)));
+  return asaasRequest<AsaasCheckout>("/checkouts", {
     method: "POST",
     body: JSON.stringify({
-      ...input,
-      billingType: "UNDEFINED",
-      cycle: "MONTHLY",
-      nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
-      description: "Assinatura MeuCaixa",
+      billingTypes: ["PIX", "CREDIT_CARD"],
+      chargeTypes: ["RECURRENT"],
+      minutesToExpire: 60,
+      externalReference: input.externalReference,
+      callback: {
+        successUrl: input.successUrl,
+        cancelUrl: input.cancelUrl,
+        expiredUrl: input.expiredUrl,
+      },
+      items: [{
+        name: "Assinatura MeuCaixa",
+        description: "Plano mensal MeuCaixa",
+        quantity: 1,
+        value: input.value,
+      }],
+      ...(Object.keys(customerData).length ? { customerData } : {}),
+      subscription: {
+        cycle: "MONTHLY",
+        nextDueDate: new Date(Date.now() + 86_400_000).toISOString().replace("T", " ").slice(0, 19),
+      },
     }),
   });
 }
