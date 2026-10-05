@@ -5,7 +5,6 @@ import {
   Boxes,
   Check,
   ChevronRight,
-  MessageCircle,
   Mail,
   ShieldCheck,
   ShoppingCart,
@@ -15,17 +14,11 @@ import {
 import { MobileMarketingNav } from "@/components/marketing/MobileMarketingNav";
 import { MarketingAnalytics } from "@/components/marketing/MarketingAnalytics";
 import {
-  CONTACT_MESSAGES,
-  contactFallback,
   emailLink,
   marketingContact,
-  whatsappLink,
 } from "@/lib/marketing/contact";
 
-const { whatsappNumber, email: contactEmail } = marketingContact;
-const whatsappHref = whatsappLink(CONTACT_MESSAGES.hire);
-const trialHref = "/cadastro";
-const asaasCheckoutUrl = process.env.NEXT_PUBLIC_ASAAS_CHECKOUT_URL?.trim() ?? "";
+const { email: contactEmail } = marketingContact;
 const TRIAL_DAYS = "7";
 const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
 const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
