@@ -33,7 +33,12 @@ export async function POST(request: Request) {
   });
   const organizationId = prepared?.[0]?.organization_id;
   if (prepareError || !organizationId) {
-    console.error("prepare_paid_signup failed", prepareError);
+    console.error("prepare_paid_signup failed", {
+      code: prepareError?.code,
+      details: prepareError?.details,
+      hint: prepareError?.hint,
+      message: prepareError?.message,
+    });
     return NextResponse.json({ error: "Não foi possível preparar sua assinatura." }, { status: 500 });
   }
 
