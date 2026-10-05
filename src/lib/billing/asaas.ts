@@ -40,9 +40,10 @@ export type AsaasCheckout = {
 };
 
 export function getAsaasCheckoutUrl(checkout: AsaasCheckout) {
+  const host = API_BASE.includes("sandbox") ? "sandbox.asaas.com" : "asaas.com";
   return (
     checkout.link ||
-    `https://asaas.com/checkoutSession/show?id=${encodeURIComponent(checkout.id)}`
+    `https://${host}/checkoutSession/show?id=${encodeURIComponent(checkout.id)}`
   );
 }
 

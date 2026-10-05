@@ -37,6 +37,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não foi possível preparar sua assinatura." }, { status: 500 });
   }
 
+  const { data: entitlement } = await admin.from("organization_entitlements").select("status,asaas_checkout_id").eq("organization_id", organizationId).maybeSingle();
+  if (entitlement?.status === "pending" && entitlement.asaas_checkout_id) {
+    return NextResponse.json({ url: getAsaasCheckoutUrl({ id: entitlement.asaas_checkout_id }) });
+  }
+
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
   try {
     const checkout = await createRecurringCheckout({
@@ -47,6 +52,8 @@ export async function POST(request: Request) {
       expiredUrl: `${siteUrl}/cadastro?mode=subscribe&checkout=expired`,
       customerData: { name: String(metadata.full_name || company), email },
     });
+    const { error: entitlementError } = await admin.from("organization_entitlements").update({ asaas_checkout_id: checkout.id, status: "pending", payment_confirmed: false }).eq("organization_id", organizationId);
+    if (entitlementError) return NextResponse.json({ error: "Não foi possível salvar o checkout." }, { status: 500 });
     return NextResponse.json({ url: getAsaasCheckoutUrl(checkout), checkoutId: checkout.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível iniciar a cobrança.";

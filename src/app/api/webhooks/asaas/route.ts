@@ -13,7 +13,7 @@ type AsaasPayload = {
   id?: string;
   event?: string;
   checkout?: { id?: string; status?: string; externalReference?: string };
-  payment?: { subscription?: string; customer?: string; status?: string; billingType?: string; dueDate?: string };
+  payment?: { subscription?: string; customer?: string; status?: string; billingType?: string; dueDate?: string; externalReference?: string };
   subscription?: { id?: string; customer?: string; status?: string; billingType?: string; nextDueDate?: string; externalReference?: string };
 };
 
@@ -34,11 +34,20 @@ export async function POST(request: Request) {
   if (eventError?.code === "23505") return NextResponse.json({ received: true });
   if (eventError) return NextResponse.json({ error: "Event storage failed" }, { status: 500 });
 
-  let organizationId = payload.checkout?.externalReference || payload.subscription?.externalReference || null;
+  let organizationId = payload.checkout?.externalReference || payload.subscription?.externalReference || payload.payment?.externalReference || null;
   const subscriptionId = payload.payment?.subscription ?? payload.subscription?.id ?? null;
+
+  if (!organizationId && payload.checkout?.id) {
+    const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_checkout_id", payload.checkout.id).maybeSingle();
+    organizationId = data?.organization_id ?? null;
+  }
 
   if (!organizationId && subscriptionId) {
     const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_subscription_id", subscriptionId).maybeSingle();
+    organizationId = data?.organization_id ?? null;
+  }
+  if (!organizationId && payload.payment?.customer) {
+    const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_customer_id", payload.payment.customer).maybeSingle();
     organizationId = data?.organization_id ?? null;
   }
 
@@ -48,6 +57,10 @@ export async function POST(request: Request) {
       payment_confirmed: true,
       grace_until: null,
     }).eq("organization_id", organizationId);
+  }
+
+  if (["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"].includes(payload.event || "") && organizationId) {
+    await admin.from("organization_entitlements").update({ status: "base", payment_confirmed: false, asaas_checkout_id: null }).eq("organization_id", organizationId);
   }
 
   if (payload.event === "SUBSCRIPTION_CREATED" && payload.subscription?.id && organizationId) {

@@ -26,6 +26,9 @@ export async function POST(request: Request) {
   if (entitlement.status === "active" && entitlement.payment_confirmed) {
     return NextResponse.json({ error: "Esta assinatura já está ativa." }, { status: 409 });
   }
+  if (entitlement.status === "pending" && entitlement.asaas_checkout_id) {
+    return NextResponse.json({ url: getAsaasCheckoutUrl({ id: entitlement.asaas_checkout_id }) });
+  }
 
   const { data: organization } = await admin
     .from("organizations")
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
     const checkoutUrl = getAsaasCheckoutUrl(checkout);
 
     await admin.from("organization_entitlements").update({
+      asaas_checkout_id: checkout.id,
       status: entitlement.status === "trial" ? "trial" : "pending",
       payment_confirmed: false,
     }).eq("organization_id", current.organization_id);
