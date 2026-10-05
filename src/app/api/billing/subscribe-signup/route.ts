@@ -1,0 +1,55 @@
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaas";
+
+type SubscribeSignupBody = { userId?: string; email?: string; company?: string };
+
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => null) as SubscribeSignupBody | null;
+  const userId = String(body?.userId || "").trim();
+  const email = String(body?.email || "").trim().toLowerCase();
+  const company = String(body?.company || "").trim();
+
+  if (!userId || !email || !company) {
+    return NextResponse.json({ error: "Dados de assinatura incompletos." }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+  const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
+  const user = userData?.user;
+  if (userError || !user || user.email?.toLowerCase() !== email) {
+    return NextResponse.json({ error: "Cadastro não encontrado." }, { status: 400 });
+  }
+
+  const metadata = user.user_metadata ?? {};
+  if (metadata.signup_mode !== "subscribe" || String(metadata.company_name || "").trim() !== company) {
+    return NextResponse.json({ error: "Cadastro não autorizado para assinatura." }, { status: 403 });
+  }
+
+  const { data: prepared, error: prepareError } = await admin.rpc("prepare_paid_signup", {
+    p_user_id: user.id,
+    p_company_name: company,
+    p_email: email,
+  });
+  const organizationId = prepared?.[0]?.organization_id;
+  if (prepareError || !organizationId) {
+    console.error("prepare_paid_signup failed", prepareError);
+    return NextResponse.json({ error: "Não foi possível preparar sua assinatura." }, { status: 500 });
+  }
+
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
+  try {
+    const checkout = await createRecurringCheckout({
+      externalReference: organizationId,
+      value: 79.99,
+      successUrl: `${siteUrl}/login?payment=success`,
+      cancelUrl: `${siteUrl}/cadastro?mode=subscribe&checkout=cancelled`,
+      expiredUrl: `${siteUrl}/cadastro?mode=subscribe&checkout=expired`,
+      customerData: { name: String(metadata.full_name || company), email },
+    });
+    return NextResponse.json({ url: getAsaasCheckoutUrl(checkout), checkoutId: checkout.id });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Não foi possível iniciar a cobrança.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+}
