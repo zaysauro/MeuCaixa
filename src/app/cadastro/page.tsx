@@ -40,22 +40,39 @@ function CadastroForm() {
     });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
 
+    if (subscribe) {
+      if (!data.user?.id) {
+        setError("Sua conta foi criada, mas não conseguimos iniciar o pagamento. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      const checkoutResponse = await fetch("/api/billing/subscribe-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: data.user.id, email, company }),
+      });
+      const checkoutBody = await checkoutResponse.json().catch(() => ({}));
+      if (!checkoutResponse.ok || !checkoutBody.url) {
+        setError(checkoutBody.error || "Não foi possível abrir o pagamento agora.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.assign(checkoutBody.url);
+      return;
+    }
+
     if (!data.session) {
-      setMessage(subscribe
-        ? "Cadastro criado. Confirme seu e-mail e entre no MeuCaixa para continuar para a assinatura."
-        : "Cadastro criado. Confirme seu e-mail e entre no MeuCaixa para iniciar seus 7 dias grátis.");
-      setLoading(false); return;
+      setMessage("Cadastro criado. Confirme seu e-mail e entre no MeuCaixa para iniciar seus 7 dias grátis.");
+      setLoading(false);
+      return;
     }
 
     const { error: onboardingError } = await supabase.rpc("complete_onboarding", {
       p_company_name: company, p_branch_name: "Matriz",
     });
     if (onboardingError) { setError("Sua conta foi criada, mas não conseguimos criar a empresa. Entre novamente para concluir o cadastro."); setLoading(false); return; }
-
-    if (subscribe) {
-      window.location.assign("/dashboard/configuracoes/upgrade?autocheckout=1");
-      return;
-    }
 
     const { error: trialError } = await supabase.rpc("start_my_trial");
     if (trialError) { setError("Empresa criada, mas não conseguimos iniciar o teste grátis. Tente entrar novamente."); setLoading(false); return; }
