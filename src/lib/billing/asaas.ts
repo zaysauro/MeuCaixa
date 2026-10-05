@@ -40,6 +40,20 @@ export function findAsaasSubscriptions(externalReference: string) {
   return asaasRequest<{ data: AsaasSubscription[] }>(`/subscriptions?externalReference=${encodeURIComponent(externalReference)}&includeDeleted=false`);
 }
 
-export function createAsaasSubscription(input: { customer: string; externalReference: string }) {
-  return asaasRequest<AsaasSubscription>("/subscriptions", { method: "POST", body: JSON.stringify({ ...input, billingType: "UNDEFINED", value: 79.99, cycle: "MONTHLY", nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10), description: "Assinatura MeuCaixa" }) });
+export function createAsaasSubscription(input: { customer: string; externalReference: string; value: number }) {
+  return asaasRequest<AsaasSubscription>("/subscriptions", {
+    method: "POST",
+    body: JSON.stringify({
+      ...input,
+      billingType: "UNDEFINED",
+      cycle: "MONTHLY",
+      nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
+      description: "Assinatura MeuCaixa",
+    }),
+  });
+}
+
+export function calculateMonthlyPrice(branchCount: number, basePrice = 79.99, additionalBranchPrice = 50) {
+  const additional = Math.max(0, Math.trunc(branchCount) - 1);
+  return Number((basePrice + additional * additionalBranchPrice).toFixed(2));
 }
