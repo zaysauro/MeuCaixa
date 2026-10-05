@@ -4,6 +4,10 @@ import { createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaa
 
 type SubscribeSignupBody = { userId?: string; email?: string; company?: string };
 
+function normalizeCompanyName(value: unknown) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as SubscribeSignupBody | null;
   const userId = String(body?.userId || "").trim();
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   const metadata = user.user_metadata ?? {};
-  if (metadata.signup_mode !== "subscribe" || String(metadata.company_name || "").trim() !== company) {
+  if (metadata.signup_mode !== "subscribe" || normalizeCompanyName(metadata.company_name) !== normalizeCompanyName(company)) {
     return NextResponse.json({ error: "Cadastro não autorizado para assinatura." }, { status: 403 });
   }
 

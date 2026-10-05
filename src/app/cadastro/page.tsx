@@ -41,6 +41,12 @@ function CadastroForm() {
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
 
     if (subscribe) {
+      if (data.user?.identities?.length === 0) {
+        setError("Este e-mail já possui uma conta. Entre no MeuCaixa para continuar a assinatura.");
+        setLoading(false);
+        return;
+      }
+
       if (!data.user?.id) {
         setError("Sua conta foi criada, mas não conseguimos iniciar o pagamento. Tente novamente.");
         setLoading(false);
