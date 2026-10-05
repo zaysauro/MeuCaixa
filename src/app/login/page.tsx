@@ -47,9 +47,34 @@ export default function LoginPage() {
         return;
       }
 
-      // Navegação completa para garantir que os cookies da sessão
-      // sejam reconhecidos pelo middleware/server do Next.js.
-      window.location.assign(next?.startsWith("/") ? next : "/dashboard");
+      const { data: userData } = await supabase.auth.getUser();
+      const metadata = userData.user?.user_metadata ?? {};
+      const { data: organization } = await supabase.rpc("get_my_organization");
+
+      if (!organization?.length && metadata.company_name) {
+        const { error: onboardingError } = await supabase.rpc("complete_onboarding", {
+          p_company_name: String(metadata.company_name),
+          p_branch_name: "Matriz",
+        });
+        if (onboardingError) {
+          setMessage("Login realizado, mas não conseguimos concluir a criação da empresa.");
+          setLoading(false);
+          return;
+        }
+        if (metadata.signup_mode !== "subscribe") {
+          const { error: trialError } = await supabase.rpc("start_my_trial");
+          if (trialError) {
+            setMessage("Empresa criada, mas não conseguimos iniciar o período experimental.");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      const destination = metadata.signup_mode === "subscribe" && !next
+        ? "/dashboard/configuracoes/upgrade?autocheckout=1"
+        : next?.startsWith("/") ? next : "/dashboard";
+      window.location.assign(destination);
     } catch (error) {
       setMessage(
         error instanceof Error
