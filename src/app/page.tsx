@@ -395,7 +395,7 @@ export default function Home() {
             >
               Quero contratar <ArrowRight size={18} />
             </a>
-            <Link href="/cadastro" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</Link>
+            <Link href="/cadastro?mode=subscribe" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</Link>
             <Link className="pricing-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="preco">Teste grátis por 7 dias</Link>
           </div>
 
