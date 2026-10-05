@@ -29,7 +29,7 @@ function CadastroForm() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name, company_name: company, signup_mode: subscribe ? "subscribe" : "trial" } },
+      options: {\n        emailRedirectTo: "https://meucaixa.sistemakumo.com.br/login",\n        data: { full_name: name, company_name: company, signup_mode: subscribe ? "subscribe" : "trial" },\n      },
     });
     if (signUpError) { setError(signUpError.message); setLoading(false); return; }
 
