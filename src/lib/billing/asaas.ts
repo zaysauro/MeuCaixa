@@ -59,7 +59,8 @@ export function createRecurringCheckout(input: {
   return asaasRequest<AsaasCheckout>("/checkouts", {
     method: "POST",
     body: JSON.stringify({
-      billingTypes: ["PIX", "CREDIT_CARD"],
+      // Asaas only supports credit card for RECURRENT checkouts. PIX requires DETACHED.
+      billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
       minutesToExpire: 60,
       externalReference: input.externalReference,
