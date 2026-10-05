@@ -444,9 +444,7 @@ export default function Home() {
             <p>
               Comece por R$ 79,99/mês. Fale com a Kumo para conhecer o sistema e criar o acesso da sua empresa.
             </p>
-            <a className="contact-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="rodape">
-              Ainda está na dúvida? Entre em contato e solicite um teste grátis
-            </a>
+            <Link className="contact-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="rodape">Teste grátis por 7 dias</Link>
           </div>
           <div className="contact-actions-v2">
             {whatsappNumber ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="button primary"><MessageCircle size={19} /> Falar pelo WhatsApp</a> : null}
