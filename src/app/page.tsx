@@ -15,6 +15,7 @@ import {
 import { MobileMarketingNav } from "@/components/marketing/MobileMarketingNav";
 import { MarketingAnalytics } from "@/components/marketing/MarketingAnalytics";
 import {
+  CONTACT_MESSAGES,
   emailLink,
   marketingContact,
 } from "@/lib/marketing/contact";
