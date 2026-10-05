@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { calculateMonthlyPrice, createRecurringCheckout } from "@/lib/billing/asaas";
+import { calculateMonthlyPrice, createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaas";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -61,16 +61,14 @@ export async function POST(request: Request) {
       },
     });
 
-    if (!checkout.link) {
-      return NextResponse.json({ error: "O Asaas criou o checkout, mas não retornou o link de pagamento." }, { status: 502 });
-    }
+    const checkoutUrl = getAsaasCheckoutUrl(checkout);
 
     await admin.from("organization_entitlements").update({
       status: entitlement.status === "trial" ? "trial" : "pending",
       payment_confirmed: false,
     }).eq("organization_id", current.organization_id);
 
-    return NextResponse.json({ url: checkout.link, checkoutId: checkout.id });
+    return NextResponse.json({ url: checkoutUrl, checkoutId: checkout.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível iniciar a cobrança.";
     return NextResponse.json({ error: message }, { status: 502 });
