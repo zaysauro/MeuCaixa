@@ -32,7 +32,7 @@ async function asaasRequest<T>(path: string, init: RequestInit = {}) {
   } finally { clearTimeout(timeout); }
 }
 
-export type AsaasCheckout = { id: string; link?: string; status?: string; externalReference?: string };
+export type AsaasCheckout = { id: string; link?: string; status?: string; externalReference?: string };\n\nexport function getAsaasCheckoutUrl(checkout: AsaasCheckout) {\n  return checkout.link || `https://asaas.com/checkoutSession/show?id=${encodeURIComponent(checkout.id)}`;\n}
 
 export function createRecurringCheckout(input: {
   externalReference: string;
