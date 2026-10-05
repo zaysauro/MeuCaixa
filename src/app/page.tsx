@@ -451,7 +451,7 @@ export default function Home() {
           <div className="contact-actions-v2">
             {whatsappNumber ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="button primary"><MessageCircle size={19} /> Falar pelo WhatsApp</a> : null}
             {contactEmail ? <a href={emailLink(CONTACT_MESSAGES.hire)} className="button secondary"><Mail size={19} /> {contactEmail}</a> : null}
-            {!whatsappNumber && !contactEmail ? <span className="contact-config-note-v2">Contato em configuração. Fale com a equipe pelo acesso do cliente.</span> : null}
+            {!whatsappNumber && !contactEmail ? <Link href="/cadastro?mode=subscribe" className="button primary contact-subscribe-cta-v2" data-track="checkout_click" data-position="rodape">Assinar agora <ArrowRight size={19} /></Link> : null}
           </div>
         </div>
       </section>
