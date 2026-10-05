@@ -31,65 +31,29 @@ export async function POST(request: Request) {
     event_type: payload.event,
     payload,
   });
-  if (eventError?.code === "23505") return NextResponse.json({ received: true });
-  if (eventError) return NextResponse.json({ error: "Event storage failed" }, { status: 500 });
+  if (eventError?.code !== "23505" && eventError) return NextResponse.json({ error: "Event storage failed" }, { status: 500 });
 
-  let organizationId = payload.checkout?.externalReference || payload.subscription?.externalReference || payload.payment?.externalReference || null;
-  const subscriptionId = payload.payment?.subscription ?? payload.subscription?.id ?? null;
-
-  if (!organizationId && payload.checkout?.id) {
-    const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_checkout_id", payload.checkout.id).maybeSingle();
-    organizationId = data?.organization_id ?? null;
+  const graceDays = Number.isFinite(Number(process.env.BILLING_GRACE_DAYS))
+    ? Math.max(0, Number(process.env.BILLING_GRACE_DAYS))
+    : 7;
+  const { data, error } = await admin.rpc("process_asaas_webhook", {
+    p_event_id: payload.id,
+    p_event_type: payload.event,
+    p_payload: payload,
+    p_grace_days: graceDays,
+  });
+  if (error) {
+    await admin.from("billing_events").update({ error: error.message }).eq("provider_event_id", payload.id);
+    return NextResponse.json({ error: "Event processing failed" }, { status: 500 });
   }
-
-  if (!organizationId && subscriptionId) {
-    const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_subscription_id", subscriptionId).maybeSingle();
-    organizationId = data?.organization_id ?? null;
-  }
-  if (!organizationId && payload.payment?.customer) {
-    const { data } = await admin.from("organization_entitlements").select("organization_id").eq("asaas_customer_id", payload.payment.customer).maybeSingle();
-    organizationId = data?.organization_id ?? null;
-  }
-
-  if (payload.event === "CHECKOUT_PAID" && organizationId) {
-    await admin.from("organization_entitlements").update({
-      status: "active",
-      payment_confirmed: true,
-      grace_until: null,
-    }).eq("organization_id", organizationId);
-  }
-
-  if (["CHECKOUT_CANCELED", "CHECKOUT_EXPIRED"].includes(payload.event || "") && organizationId) {
-    await admin.from("organization_entitlements").update({ status: "base", payment_confirmed: false, asaas_checkout_id: null }).eq("organization_id", organizationId);
-  }
-
-  if (payload.event === "SUBSCRIPTION_CREATED" && payload.subscription?.id && organizationId) {
-    await admin.from("organization_entitlements").update({
-      asaas_subscription_id: payload.subscription.id,
-      payment_method: payload.subscription.billingType ?? null,
-      current_period_end: payload.subscription.nextDueDate ?? null,
-    }).eq("organization_id", organizationId);
-  }
-
-  if (subscriptionId) {
-    const event = payload.event;
-    const payment = payload.payment;
-    const update = event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED" || payment?.status === "RECEIVED" || payment?.status === "CONFIRMED"
-      ? { status: "active", payment_confirmed: true, payment_method: payment?.billingType ?? payload.subscription?.billingType ?? null, current_period_end: payment?.dueDate ?? payload.subscription?.nextDueDate ?? null, grace_until: null }
-      : event === "PAYMENT_OVERDUE" || payment?.status === "OVERDUE"
-        ? { status: "past_due", payment_confirmed: false, grace_until: new Date(Date.now() + Number(process.env.BILLING_GRACE_DAYS || 7) * 86_400_000).toISOString() }
-        : ["PAYMENT_REFUNDED", "PAYMENT_PARTIALLY_REFUNDED", "PAYMENT_CHARGEBACK_REQUESTED", "PAYMENT_CHARGEBACK_DISPUTE", "PAYMENT_AWAITING_CHARGEBACK_REVERSAL"].includes(event) || payment?.status === "REFUNDED"
-          ? { status: "canceled", payment_confirmed: false }
-          : event === "SUBSCRIPTION_INACTIVATED" || event === "SUBSCRIPTION_DELETED"
-            ? { status: "canceled", payment_confirmed: false }
-            : null;
-    if (update) await admin.from("organization_entitlements").update(update).eq("asaas_subscription_id", subscriptionId);
-  }
-
-  await admin.from("billing_events").update({
-    organization_id: organizationId,
-    processed_at: new Date().toISOString(),
-  }).eq("provider_event_id", payload.id);
-
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true, duplicate: data?.duplicate === true });
 }
+
+function methodNotAllowed() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405, headers: { Allow: "POST" } });
+}
+
+export const GET = methodNotAllowed;
+export const PUT = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;

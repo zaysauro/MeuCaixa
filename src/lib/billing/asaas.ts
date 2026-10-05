@@ -1,4 +1,4 @@
-const API_BASE = process.env.ASAAS_ENV === "production" ? "https://api.asaas.com/v3" : "https://api-sandbox.asaas.com/v3";
+const API_BASE = (process.env.ASAAS_BASE_URL || (process.env.ASAAS_ENV === "production" ? "https://api.asaas.com/v3" : "https://api-sandbox.asaas.com/v3")).replace(/\/$/, "");
 
 export class AsaasError extends Error {
   constructor(public readonly status: number, message: string) { super(message); }
