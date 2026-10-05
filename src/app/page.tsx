@@ -24,9 +24,9 @@ import {
 
 const { whatsappNumber, email: contactEmail } = marketingContact;
 const whatsappHref = whatsappLink(CONTACT_MESSAGES.hire);
-const trialHref = contactFallback(CONTACT_MESSAGES.trial);
+const trialHref = "/cadastro";
 const asaasCheckoutUrl = process.env.NEXT_PUBLIC_ASAAS_CHECKOUT_URL?.trim() ?? "";
-const TRIAL_DAYS = ""; // TODO: confirmar a duração do teste antes de publicar.
+const TRIAL_DAYS = "7";
 const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
 const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
 const FAQS = [
@@ -36,8 +36,8 @@ const FAQS = [
   ["Posso comparar minhas lojas?", "Sim. A estrutura de filiais permite acompanhar e comparar o desempenho das unidades."],
   ["Posso transferir produtos entre lojas?", "Sim. O módulo de estoque possui fluxo de transferência entre filiais."],
   ["Preciso trocar de sistema quando abrir outra loja?", "Não. A proposta do MeuCaixa é acompanhar o crescimento da empresa dentro do mesmo ecossistema."],
-  ["Posso testar antes de pagar?", "Entre em contato pelo botão de teste grátis. A equipe confirma a disponibilidade e orienta o próximo passo."],
-  ["Como pago?", "A contratação planejada aceita Pix, boleto ou cartão, com cobrança mensal. A forma disponível depende da configuração comercial."],
+  ["Posso testar antes de pagar?", "Sim. Crie sua conta e teste o MeuCaixa grátis por 7 dias antes de assinar."],
+  ["Como pago?", "A assinatura mensal é processada pelo Asaas. As formas disponíveis são apresentadas no momento da cobrança."],
   ["Tem fidelidade? Posso cancelar quando quiser?", "TODO: confirmar a política de cancelamento antes de publicar esta resposta."],
   ["Funciona no celular e no computador do balcão?", "Sim. O MeuCaixa funciona pelo navegador; a experiência pode variar conforme o tamanho da tela."],
   ["Funciona com leitor de código de barras?", "A câmera do celular é compatível com leitura de códigos. Leitor USB: confirmar compatibilidade específica."],
@@ -134,18 +134,10 @@ export default function Home() {
           <p className="audience-note-v2"><strong>Pensado para:</strong> mercadinhos, lojas de roupas, papelarias, assistências e lanchonetes.</p>
 
           <div className="hero-actions-v2">
-            {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" className="button primary" data-track="checkout_click" data-position="hero">Assinar agora <ArrowRight size={17} /></a> : null}
-            <a
-              href={whatsappHref}
-              target={whatsappNumber ? "_blank" : undefined}
-              rel={whatsappNumber ? "noreferrer" : undefined}
-              className="button primary hero-cta"
-              data-track="cta_whatsapp_click" data-position="hero"
-            >
-              <MessageCircle size={19} />
-              Quero contratar
-              <ArrowRight size={17} />
-            </a>
+            
+            <Link href="/cadastro" className="button primary hero-cta" data-track="trial_request_click" data-position="hero">
+              Testar grátis por 7 dias <ArrowRight size={17} />
+            </Link>
             <a
               href="#recursos"
               className="button secondary hero-secondary"
@@ -153,9 +145,9 @@ export default function Home() {
               Conhecer o sistema
             </a>
           </div>
-          <a className="marketing-trial-link-v2" href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined} data-track="trial_request_click" data-position="hero">
-            Ainda está na dúvida? Entre em contato e solicite um teste grátis
-          </a>
+          <Link className="marketing-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="hero">
+            Crie sua conta agora — 7 dias grátis
+          </Link>
 
           <div className="hero-trust">
             <span>
