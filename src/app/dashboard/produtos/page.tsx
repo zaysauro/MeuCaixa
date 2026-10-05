@@ -130,9 +130,10 @@ export default function ProductsPage() {
 
     const { data: org } = await supabase.rpc("get_my_organization");
     const organization_id = org?.[0]?.organization_id;
+    const branch_id = org?.[0]?.branch_id;
 
-    if (!organization_id) {
-      setMessage("Empresa não configurada.");
+    if (!organization_id || !branch_id) {
+      setMessage("Empresa ou filial não configurada.");
       setLoading(false);
       return;
     }
@@ -147,16 +148,16 @@ export default function ProductsPage() {
       }
     }
 
-    const { error } = await supabase.from("products").insert({
-      organization_id,
-      name: name.trim(),
-      sku: sku.trim() || null,
-      barcode: barcode.trim() || null,
-      unit,
-      cost_price: moneyBR(cost),
-      sale_price: moneyBR(price),
-      stock_quantity: numberBR(stock),
-      minimum_stock: numberBR(minimumStock),
+    const { error } = await supabase.rpc("create_product_with_stock", {
+      p_branch_id: branch_id,
+      p_name: name.trim(),
+      p_sku: sku.trim() || null,
+      p_barcode: barcode.trim() || null,
+      p_unit: unit,
+      p_cost_price: moneyBR(cost),
+      p_sale_price: moneyBR(price),
+      p_initial_stock: numberBR(stock),
+      p_minimum_stock: numberBR(minimumStock),
     });
 
     if (error) setMessage(error.message);
@@ -195,19 +196,26 @@ export default function ProductsPage() {
 
     const nextStock = numberBR(editStock);
 
-    const { error } = await supabase
-      .from("products")
-      .update({
-        name: editName.trim(),
-        sku: editSku.trim() || null,
-        barcode: editBarcode.trim() || null,
-        unit: editUnit,
-        cost_price: moneyBR(editCost),
-        sale_price: moneyBR(editPrice),
-        stock_quantity: nextStock,
-        minimum_stock: numberBR(editMinimumStock),
-      })
-      .eq("id", editing.id);
+    const { data: org } = await supabase.rpc("get_my_organization");
+    const branch_id = org?.[0]?.branch_id;
+    if (!branch_id) {
+      setMessage("Filial não configurada.");
+      setSavingEdit(false);
+      return;
+    }
+
+    const { error } = await supabase.rpc("update_product_with_stock", {
+      p_branch_id: branch_id,
+      p_product_id: editing.id,
+      p_name: editName.trim(),
+      p_sku: editSku.trim() || null,
+      p_barcode: editBarcode.trim() || null,
+      p_unit: editUnit,
+      p_cost_price: moneyBR(editCost),
+      p_sale_price: moneyBR(editPrice),
+      p_stock_quantity: nextStock,
+      p_minimum_stock: numberBR(editMinimumStock),
+    });
 
     if (error) {
       setMessage(error.code === "23505" || error.message.includes("product_barcode_already_exists") ? "Este código de barras já está cadastrado em outro produto." : error.message);
