@@ -1,9 +1,12 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -46,7 +49,7 @@ export default function LoginPage() {
 
       // Navegação completa para garantir que os cookies da sessão
       // sejam reconhecidos pelo middleware/server do Next.js.
-      window.location.assign("/dashboard");
+      window.location.assign(next?.startsWith("/") ? next : "/dashboard");
     } catch (error) {
       setMessage(
         error instanceof Error
