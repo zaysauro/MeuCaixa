@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   Mail,
+  MessageCircle,
   ShieldCheck,
   ShoppingCart,
   Wallet,
