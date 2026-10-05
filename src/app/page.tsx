@@ -458,8 +458,7 @@ export default function Home() {
 
       <div className="marketing-mobile-cta-v2" aria-label="Contato rápido">
         <a href={whatsappNumber ? whatsappHref : emailLink(CONTACT_MESSAGES.hire)} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined}><MessageCircle size={16} /> {whatsappNumber ? "Falar no WhatsApp" : "Falar com a equipe"}</a>
-        <a href={trialHref} target={whatsappNumber ? "_blank" : undefined} rel={whatsappNumber ? "noreferrer" : undefined}>Teste grátis</a>
-        {asaasCheckoutUrl ? <a href={asaasCheckoutUrl} target="_blank" rel="noreferrer" data-track="checkout_click" data-position="barra mobile">Assinar agora</a> : null}
+        <Link href="/cadastro" data-track="trial_request_click" data-position="barra mobile">Teste grátis</Link>
       </div>
 
       <footer className="marketing-footer-v2">
