@@ -71,6 +71,18 @@ export default function LoginPage() {
         }
       }
 
+      if (organization?.length && metadata.signup_mode === "trial") {
+        const { data: billing } = await supabase.rpc("get_my_billing_status");
+        if (billing?.[0]?.status === "base") {
+          const { error: trialError } = await supabase.rpc("start_my_trial");
+          if (trialError) {
+            setMessage("Não conseguimos iniciar o período experimental.");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
       const destination = metadata.signup_mode === "subscribe" && !next
         ? "/dashboard/configuracoes/upgrade?autocheckout=1"
         : next?.startsWith("/") ? next : "/dashboard";
