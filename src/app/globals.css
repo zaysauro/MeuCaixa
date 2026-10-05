@@ -954,3 +954,40 @@ select.field{appearance:auto}
 .sidebar-logout{width:100%;display:flex;align-items:center;gap:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#d7ded9;border-radius:9px;padding:10px 11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer;text-align:left;transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
 .sidebar-logout:hover{background:rgba(190,55,55,.14);border-color:rgba(230,95,95,.32);color:#ffdede;transform:translateX(2px)}
 .sidebar-logout svg{flex:0 0 auto}
+
+
+/* Cadastro — onboarding comercial */
+.signup-page{min-height:100vh;background:#f4f7f4;padding:24px;display:grid;place-items:center}
+.signup-shell{width:min(1120px,100%);min-height:680px;display:grid;grid-template-columns:minmax(0,.92fr) minmax(430px,.78fr);overflow:hidden;border:1px solid #dce5df;border-radius:28px;background:#fff;box-shadow:0 28px 80px rgba(16,30,20,.10)}
+.signup-intro{position:relative;display:flex;flex-direction:column;padding:42px 48px;background:#111714;color:#fff;overflow:hidden}
+.signup-intro:after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-150px;bottom:-170px;background:rgba(73,200,120,.10);box-shadow:0 0 100px rgba(73,200,120,.12)}
+.signup-back{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;width:max-content;color:#aebbb3;font-size:12px;font-weight:700}
+.signup-back:hover{color:#fff}
+.signup-brand{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin-top:38px;font-size:19px;font-weight:850;letter-spacing:-.04em}
+.signup-brand img{width:96px;height:44px;object-fit:contain;filter:brightness(0) invert(1)}
+.signup-brand>span>span{color:#55d184}
+.signup-copy{position:relative;z-index:1;margin:auto 0;max-width:510px;padding:55px 0}
+.signup-kicker,.signup-step{display:block;font-size:10px;letter-spacing:.15em;font-weight:850;color:#5fd58a}
+.signup-copy h1{margin:16px 0 18px;font-size:clamp(43px,4.5vw,61px);line-height:.98;letter-spacing:-.065em;color:#fff}
+.signup-copy p{max-width:480px;color:#aebbb3;font-size:15px;line-height:1.7}
+.signup-benefits{position:relative;z-index:1;display:grid;gap:11px;margin-bottom:26px}
+.signup-benefits span{display:flex;align-items:center;gap:9px;color:#dce5df;font-size:12px;font-weight:650}
+.signup-benefits svg{color:#55d184}
+.signup-security{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding-top:20px;border-top:1px solid #2b352f;color:#829088;font-size:10px}
+.signup-form-side{display:grid;place-items:center;padding:50px 54px;background:#fff}
+.signup-card{width:100%;max-width:430px}
+.signup-card-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:12px;background:#edf8f1;color:#16803c;margin-bottom:20px}
+.signup-step{color:#16803c;margin-bottom:10px}
+.signup-card h2{margin:0;font-size:32px;letter-spacing:-.045em;line-height:1.05}
+.signup-card>p{margin-top:10px;font-size:13px;line-height:1.55}
+.signup-form{display:grid;gap:14px;margin-top:28px}
+.signup-form label{gap:7px;color:#344139;font-size:12px}
+.signup-form .field{height:46px;border-radius:10px;border-color:#d7dfda;background:#fbfcfb;padding:0 13px}
+.signup-form .field::placeholder{color:#a0aaa4}
+.signup-form .field:focus{background:#fff}
+.signup-submit{width:100%;min-height:48px;margin-top:5px;border-radius:10px}
+.signup-feedback{margin-top:14px}
+.signup-login{margin-top:22px;padding-top:20px;border-top:1px solid #e7ece8;text-align:center;color:#758078;font-size:12px}
+.signup-login a{color:#126b35;font-weight:800}
+@media(max-width:850px){.signup-page{padding:0;background:#fff;place-items:stretch}.signup-shell{min-height:100vh;grid-template-columns:1fr;border:0;border-radius:0;box-shadow:none}.signup-intro{padding:26px 28px 30px}.signup-brand{margin-top:22px}.signup-copy{padding:42px 0 28px}.signup-copy h1{font-size:44px;max-width:620px}.signup-benefits{grid-template-columns:1fr 1fr}.signup-security{display:none}.signup-form-side{padding:40px 28px 55px}.signup-card{max-width:520px}}
+@media(max-width:560px){.signup-intro{padding:22px 20px 26px}.signup-brand{margin-top:18px}.signup-brand img{width:78px;height:36px}.signup-copy{padding:32px 0 23px}.signup-copy h1{font-size:37px}.signup-copy p{font-size:14px}.signup-benefits{grid-template-columns:1fr;gap:8px;margin-bottom:5px}.signup-form-side{padding:32px 20px 44px;place-items:start center}.signup-card h2{font-size:28px}.signup-form{margin-top:23px}.signup-form .field{height:45px}}
