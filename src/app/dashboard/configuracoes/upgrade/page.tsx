@@ -6,7 +6,8 @@ import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButto
 const brl = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const dateBR = (value?: string | null) => value ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value)) : "—";
 
-export default async function UpgradePage() {
+export default async function UpgradePage({ searchParams }: { searchParams: Promise<{ autocheckout?: string; checkout?: string }> }) {
+  const params = await searchParams;
   const supabase = await createClient();
   const { data: org } = await supabase.rpc("get_my_organization");
   if (!org?.length || !["owner", "admin"].includes(String(org[0].role))) redirect("/dashboard");
@@ -25,7 +26,7 @@ export default async function UpgradePage() {
 
   const status = String(current?.status || "base");
   const statusLabels: Record<string, string> = {
-    base: "Legado / sem cobrança",
+    base: "Acesso cadastrado",
     trial: "Teste grátis",
     pending: "Aguardando pagamento",
     active: "Assinatura ativa",
@@ -47,7 +48,7 @@ export default async function UpgradePage() {
   const billingEnabled = process.env.BILLING_ENABLED === "true";
 
   const descriptions: Record<string, string> = {
-    base: "Esta organização ainda não participa da cobrança automática.",
+    base: "Sua empresa está cadastrada e ainda não possui uma assinatura ativa.",
     trial: trialDays === 0 ? "Seu período experimental termina hoje." : `Seu período experimental está ativo. ${trialDays} ${trialDays === 1 ? "dia restante" : "dias restantes"}.`,
     pending: "A assinatura foi iniciada e estamos aguardando a confirmação do pagamento.",
     active: "Sua assinatura está ativa e o MeuCaixa está liberado.",
@@ -78,7 +79,7 @@ export default async function UpgradePage() {
         <h2>Assinatura MeuCaixa</h2>
         <p>Plano base de {brl(basePrice)}/mês para a matriz. Cada filial adicional custa {brl(branchPrice)}/mês. Pagamento por Pix, boleto ou cartão processado pelo Asaas.</p>
         {status === "trial" && <p style={{ marginTop: 10 }}>Você pode assinar antes do fim do teste. Assim que o pagamento for confirmado, o status muda para <strong>Assinatura ativa</strong>.</p>}
-        {status === "active" ? <div className="success" style={{ marginTop: 16 }}>Pagamento confirmado. Nenhuma ação necessária.</div> : billingEnabled && showCheckout ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} /></div> : <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
+        {status === "active" ? <div className="success" style={{ marginTop: 16 }}>Pagamento confirmado. Nenhuma ação necessária.</div> : billingEnabled && showCheckout ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} autoStart={params.autocheckout === "1"} /></div> : <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
       </div>
       <Link href="/dashboard/configuracoes">Voltar para configurações</Link>
     </div>
