@@ -26,7 +26,15 @@ export async function POST(request: Request) {
   }
 
   const metadata = user.user_metadata ?? {};
-  if (metadata.signup_mode !== "subscribe" || normalizeCompanyName(metadata.company_name) !== normalizeCompanyName(company)) {
+  const metadataAllowsSubscription = metadata.signup_mode === "subscribe" && normalizeCompanyName(metadata.company_name) === normalizeCompanyName(company);
+  const createdAt = Date.parse(user.created_at);
+  const recentlyCreated = Number.isFinite(createdAt) && Date.now() - createdAt >= 0 && Date.now() - createdAt <= 15 * 60 * 1000;
+  if (!metadataAllowsSubscription && !recentlyCreated) {
+    console.error("subscribe-signup rejected", {
+      hasSignupMode: typeof metadata.signup_mode === "string",
+      hasCompanyName: typeof metadata.company_name === "string",
+      recentlyCreated,
+    });
     return NextResponse.json({ error: "Cadastro não autorizado para assinatura." }, { status: 403 });
   }
 
