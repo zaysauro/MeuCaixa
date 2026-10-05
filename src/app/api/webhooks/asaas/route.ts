@@ -53,11 +53,8 @@ export async function POST(request: Request) {
   if (payload.event === "SUBSCRIPTION_CREATED" && payload.subscription?.id && organizationId) {
     await admin.from("organization_entitlements").update({
       asaas_subscription_id: payload.subscription.id,
-      status: "active",
-      payment_confirmed: true,
       payment_method: payload.subscription.billingType ?? null,
       current_period_end: payload.subscription.nextDueDate ?? null,
-      grace_until: null,
     }).eq("organization_id", organizationId);
   }
 
