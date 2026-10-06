@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Banknote, CreditCard, Smartphone, X } from "lucide-react";
 import type { PaymentInput, PaymentMethod } from "@/lib/pos/types";
 import { validatePayments } from "@/lib/pos/sales";
+import { formatBRL, formatMoneyInput, parseBRLMoneyInput } from "@/lib/money";
 
 type Props = { total: number; onClose: () => void; onConfirm: (payments: PaymentInput[]) => void; };
 const methods: Array<{ id: PaymentMethod; label: string }> = [
   { id: "cash", label: "Dinheiro" }, { id: "pix", label: "PIX" }, { id: "debit_card", label: "Débito" }, { id: "credit_card", label: "Crédito" }, { id: "other", label: "Outro" },
 ];
-const money = (value: number) => "R$ " + value.toFixed(2).replace(".", ",");
+const money = (value: number) => formatBRL(value);
 
 export default function PaymentModal({ total, onClose, onConfirm }: Props) {
   const [payments, setPayments] = useState<PaymentInput[]>([{ method: "pix", amount: total }]);
@@ -19,7 +20,7 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
   const change = useMemo(() => {
     const cash = payments.filter((p) => p.method === "cash").reduce((s, p) => s + Number(p.amount), 0);
     if (!cash || !cashReceived) return 0;
-    return Math.max(Number(cashReceived.replace(",", ".")) - cash, 0);
+    return Math.max((parseBRLMoneyInput(cashReceived) ?? 0) - cash, 0);
   }, [payments, cashReceived]);
 
   useEffect(() => { const timer = window.setTimeout(() => document.getElementById("payment-amount-0")?.focus(), 0); return () => window.clearTimeout(timer); }, []);
@@ -49,14 +50,16 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
   }
 
   function updateAmount(index: number, value: string) {
-    const numeric = Number(value.replace(",", "."));
-    setPayments((current) => current.map((payment, i) => i === index ? { ...payment, amount: Number.isFinite(numeric) ? numeric : 0 } : payment));
+    const numeric = parseBRLMoneyInput(value);
+    setPayments((current) => current.map((payment, i) => i === index ? { ...payment, amount: numeric ?? 0 } : payment));
   }
 
   function confirm() {
     const activePayments = payments.filter((payment) => Number(payment.amount || 0) > 0);
     if (!activePayments.length) { setError("Adicione uma forma de pagamento."); return; }
-    const normalized = activePayments.map((payment) => payment.method === "cash" && cashReceived ? { ...payment, receivedAmount: Number(cashReceived.replace(",", ".")) } : payment);
+    const received = cashReceived ? parseBRLMoneyInput(cashReceived) : null;
+    if (payments.some((payment) => payment.method === "cash") && (received === null || received === undefined)) { setError("Informe um valor recebido válido."); return; }
+    const normalized = activePayments.map((payment) => payment.method === "cash" && received !== null && received !== undefined ? { ...payment, receivedAmount: received } : payment);
     const result = validatePayments(normalized, total);
     if (!result.ok) { setError(result.message); return; }
     onConfirm(normalized);
@@ -70,7 +73,7 @@ export default function PaymentModal({ total, onClose, onConfirm }: Props) {
         {method.id === "cash" ? <Banknote size={17} /> : method.id === "pix" ? <Smartphone size={17} /> : <CreditCard size={17} />}{method.label}
       </button>)}</div>
       <div className="payment-list">{payments.map((payment, index) => <div className="payment-row" key={index}><strong>{methods.find((m) => m.id === payment.method)?.label}</strong>
-        <input id={"payment-amount-" + index} className="field payment-input" inputMode="decimal" value={String(payment.amount).replace(".", ",")} onChange={(event) => updateAmount(index, event.target.value)} />
+        <input id={"payment-amount-" + index} className="field payment-input" inputMode="decimal" value={formatMoneyInput(payment.amount)} onChange={(event) => updateAmount(index, event.target.value)} />
         <button type="button" className="payment-remove" onClick={()=>removePayment(index)} aria-label={"Remover pagamento "+(methods.find((m)=>m.id===payment.method)?.label??"")} title="Remover forma de pagamento"><X size={16}/></button></div>)}</div>
       {payments.some((payment) => payment.method === "cash") && <label>Dinheiro recebido<input className="field" inputMode="decimal" value={cashReceived} onChange={(event) => setCashReceived(event.target.value)} placeholder="Ex.: 100,00" /></label>}
       <div className="payment-status"><div><span>Falta</span><strong>{money(remaining)}</strong></div><div><span>Troco</span><strong>{money(change)}</strong></div></div>

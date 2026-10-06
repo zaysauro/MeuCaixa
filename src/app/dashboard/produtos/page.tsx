@@ -7,6 +7,7 @@ import BarcodeScanner from "@/components/BarcodeScanner";
 import Link from "next/link";
 import { Upload } from "lucide-react";
 import { ContextHelp } from "@/components/ContextHelp";
+import { formatBRL, formatMoneyInput, moneyToDatabase, parseLocalizedDecimalInput } from "@/lib/money";
 
 type Product = {
   id: string;
@@ -36,30 +37,15 @@ const UNITS = [
   { value: "M3", label: "Metro cúbico (M³)" },
 ];
 
-const numberBR = (value: string) => {
-  const clean = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  const parsed = Number(clean);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const moneyBR = (value: string) => numberBR(value);
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(value) || 0);
+const numberBR = (value: string) => parseLocalizedDecimalInput(value) ?? 0;
+const formatMoney = (value: number) => formatBRL(value);
 
 const formatQuantity = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 3,
   }).format(Number(value) || 0);
 
-const formatInputMoney = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+const formatInputMoneyValue = (value: number) => formatMoneyInput(value);
 
 const formatInputQuantity = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -93,6 +79,10 @@ export default function ProductsPage() {
   const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null);
   const createRequestId = useRef(crypto.randomUUID());
   const supabase = createClient();
+  function normalizeMoneyOnBlur(value: string, setValue: (next: string) => void) {
+    const parsed = moneyToDatabase(value);
+    if (parsed !== null) setValue(formatMoneyInput(parsed));
+  }
 
   async function load() {
     const { data, error } = await supabase
@@ -131,6 +121,14 @@ export default function ProductsPage() {
     setMessage("");
     setDuplicateProduct(null);
 
+    const costValue = cost.trim() ? moneyToDatabase(cost) : 0;
+    const priceValue = moneyToDatabase(price);
+    if (costValue === null || priceValue === null || priceValue < 0 || costValue < 0) {
+      setMessage("Informe preços válidos, como 10,90 ou 10.90.");
+      setLoading(false);
+      return;
+    }
+
     const { data: org } = await supabase.rpc("get_my_organization");
     const organization_id = org?.[0]?.organization_id;
     const branch_id = org?.[0]?.branch_id;
@@ -157,8 +155,8 @@ export default function ProductsPage() {
       p_sku: sku.trim() || null,
       p_barcode: barcode.trim() || null,
       p_unit: unit,
-      p_cost_price: moneyBR(cost),
-      p_sale_price: moneyBR(price),
+      p_cost_price: costValue,
+      p_sale_price: priceValue,
       p_initial_stock: numberBR(stock),
       p_minimum_stock: numberBR(minimumStock),
       p_request_id: createRequestId.current,
@@ -181,8 +179,8 @@ export default function ProductsPage() {
     setEditSku(product.sku ?? "");
     setEditBarcode(product.barcode ?? "");
     setEditUnit(product.unit);
-    setEditCost(formatInputMoney(product.cost_price));
-    setEditPrice(formatInputMoney(product.sale_price));
+    setEditCost(formatInputMoneyValue(product.cost_price));
+    setEditPrice(formatInputMoneyValue(product.sale_price));
     setEditStock(formatInputQuantity(product.stock_quantity));
     setEditMinimumStock(formatInputQuantity(product.minimum_stock));
     setMessage("");
@@ -198,6 +196,14 @@ export default function ProductsPage() {
 
     setSavingEdit(true);
     setMessage("");
+
+    const costValue = moneyToDatabase(editCost);
+    const priceValue = moneyToDatabase(editPrice);
+    if (costValue === null || priceValue === null || priceValue < 0 || costValue < 0) {
+      setMessage("Informe preços válidos, como 10,90 ou 10.90.");
+      setSavingEdit(false);
+      return;
+    }
 
     const nextStock = numberBR(editStock);
 
@@ -216,8 +222,8 @@ export default function ProductsPage() {
       p_sku: editSku.trim() || null,
       p_barcode: editBarcode.trim() || null,
       p_unit: editUnit,
-      p_cost_price: moneyBR(editCost),
-      p_sale_price: moneyBR(editPrice),
+      p_cost_price: costValue,
+      p_sale_price: priceValue,
       p_stock_quantity: nextStock,
       p_minimum_stock: numberBR(editMinimumStock),
     });
@@ -355,6 +361,7 @@ export default function ProductsPage() {
               placeholder="0,00"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
+              onBlur={() => normalizeMoneyOnBlur(cost, setCost)}
             />
           </label>
 
@@ -366,6 +373,7 @@ export default function ProductsPage() {
               placeholder="0,00"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
+              onBlur={() => normalizeMoneyOnBlur(price, setPrice)}
               required
             />
           </label>
@@ -441,12 +449,12 @@ export default function ProductsPage() {
 
             <label>
               Preço de custo
-              <input className="field" inputMode="decimal" value={editCost} onChange={(e) => setEditCost(e.target.value)} required />
+              <input className="field" inputMode="decimal" value={editCost} onChange={(e) => setEditCost(e.target.value)} onBlur={() => normalizeMoneyOnBlur(editCost, setEditCost)} required />
             </label>
 
             <label>
               Preço de venda
-              <input className="field" inputMode="decimal" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} required />
+              <input className="field" inputMode="decimal" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} onBlur={() => normalizeMoneyOnBlur(editPrice, setEditPrice)} required />
             </label>
 
             <label>

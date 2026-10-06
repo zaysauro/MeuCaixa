@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { ContextHelp } from "@/components/ContextHelp";
+import { formatBRL, parseBRLMoneyInput } from "@/lib/money";
 
 type Branch={branch_id:string;branch_name:string;branch_code:string|null;is_headquarters:boolean;active:boolean;role:string};
 type Product={id:string;name:string;sku:string|null;barcode?:string|null;unit:string;cost_price:number;sale_price:number;minimum_stock:number};
@@ -12,7 +13,7 @@ type Movement={id:string;product_id:string;type:string;quantity:number;quantity_
 type Transfer={id:string;transfer_number:number;source_branch_id:string;destination_branch_id:string;status:string;notes:string|null;created_at:string};
 type Supplier={id:string;name:string};
 
-const money=(n:number)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+ const money=(n:number)=>formatBRL(n);
 const statusLabel=(s:string)=>({requested:"Solicitada",sent:"Enviada",received:"Recebida",cancelled:"Cancelada"}[s]??s);
 
 export default function StockDashboard(){
@@ -86,6 +87,15 @@ export default function StockDashboard(){
  }
 
  function clearForm(){setSelectedProduct("");setQty("");setCost("");setReason("");setSupplierId("");setTransferProduct("");setTransferQty("");}
+ async function submitMovement(){
+  if(tab==="entry"){
+   const unitCost=parseBRLMoneyInput(cost);
+   if(cost.trim() && unitCost===null){setMessage("Informe um custo unitário válido.");return;}
+   await call("stock_entry",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_unit_cost:unitCost??0,p_reason:reason||"Entrada de estoque",p_supplier_id:supplierId||null});
+   return;
+  }
+  await call("stock_exit",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_reason:reason});
+ }
  async function startInventory(){setBusy(true);const {data,error}=await supabase.rpc("start_stock_inventory",{p_branch_id:branchId,p_notes:null});if(error)setMessage(error.message);else{setInventoryResult(null);setMessage("Inventário iniciado. Você pode contar aos poucos e continuar depois.");await load();}setBusy(false)}
  async function saveCount(){if(!inventorySession||!selectedProduct||qty==="")return;setBusy(true);const {error}=await supabase.rpc("save_stock_inventory_count",{p_session_id:inventorySession.id,p_product_id:selectedProduct,p_counted_quantity:Number(qty)});if(error)setMessage(error.message);else{setQty("");setSelectedProduct("");setMessage("Contagem salva. Você pode continuar agora ou voltar depois.");await load();}setBusy(false)}
  async function closeInventory(){if(!inventorySession||!confirm("Fechar este inventário? O estoque será ajustado pelas divergências encontradas."))return;setBusy(true);const {data,error}=await supabase.rpc("close_stock_inventory",{p_session_id:inventorySession.id});if(error)setMessage(error.message);else{setInventoryResult(data);setMessage("Inventário fechado e estoque conciliado.");await load();}setBusy(false)}
@@ -126,9 +136,9 @@ export default function StockDashboard(){
    {["entry","exit"].includes(tab)&&<div className="panel stock-form"><div className="panel-title"><h2>{tab==="entry"?"Entrada de estoque":"Saída de estoque"}</h2>{tab==="entry"&&<div className="actions"><button type="button" className="secondary" onClick={()=>setScannerOpen(true)}>Ler código de barras</button><a className="button secondary" href="/dashboard/produtos/importar">Importar CSV</a><a className="button primary" href="/dashboard/produtos">+ Novo produto</a></div>}</div>
     <label>Produto<select value={selectedProduct} onChange={e=>setSelectedProduct(e.target.value)}><option value="">Selecione</option>{products.map(p=><option key={p.id} value={p.id}>{p.name} · {p.sku||"sem SKU"}</option>)}</select></label>
     <label>Quantidade<input type="number" min="0" step="0.001" value={qty} onChange={e=>setQty(e.target.value)}/></label>
-    {tab==="entry"&&<><label>Custo unitário<input type="number" min="0" step="0.0001" value={cost} onChange={e=>setCost(e.target.value)}/></label><label>Fornecedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Sem fornecedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label></>}
+    {tab==="entry"&&<><label>Custo unitário<input inputMode="decimal" value={cost} onChange={e=>setCost(e.target.value)}/></label><label>Fornecedor<select value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Sem fornecedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label></>}
     <label>Motivo{tab==="exit"&&<span className="required"> obrigatório</span>}<input value={reason} onChange={e=>setReason(e.target.value)} placeholder={tab==="entry"?"Compra/recebimento":"Informe o motivo da operação"}/></label>
-    <button className="primary" disabled={busy||!selectedProduct||!qty||(tab==="exit"&&!reason.trim())} onClick={()=>tab==="entry"?call("stock_entry",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_unit_cost:Number(cost),p_reason:reason||"Entrada de estoque",p_supplier_id:supplierId||null}):call("stock_exit",{p_branch_id:branchId,p_product_id:selectedProduct,p_quantity:Number(qty),p_reason:reason})}>{busy?"Processando...":"Confirmar operação"}</button>
+    <button className="primary" disabled={busy||!selectedProduct||!qty||(tab==="exit"&&!reason.trim())} onClick={submitMovement}>{busy?"Processando...":"Confirmar operação"}</button>
    </div>}
    {tab==="inventory"&&<div className="panel stock-form"><div className="panel-title"><div><h2>Inventário / contagem física</h2><p>Conte os produtos sem alterar o estoque. Você pode pausar e continuar depois; os ajustes só acontecem ao fechar.</p></div>{!inventorySession&&<button className="primary" disabled={busy} onClick={startInventory}>Iniciar inventário</button>}</div>
     {inventorySession&&<><div className="actions"><button type="button" className="secondary" onClick={()=>setScannerOpen(true)}>Ler código de barras</button><a className="button secondary" href="/dashboard/produtos">+ Novo produto</a></div>

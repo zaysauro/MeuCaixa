@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DiscountType } from "@/lib/pos/types";
+import { parseBRLMoneyInput, parseLocalizedDecimalInput } from "@/lib/money";
 
 type Props = { title: string; initialType: DiscountType; initialValue: number; maxAmount: number; onClose: () => void; onConfirm: (type: DiscountType, value: number) => void; };
 
@@ -11,9 +12,9 @@ export default function DiscountModal({ title, initialType, initialValue, maxAmo
   useEffect(() => { const timer = window.setTimeout(() => document.getElementById("discount-value")?.focus(), 0); return () => window.clearTimeout(timer); }, []);
 
   function confirm() {
-    const numeric = Number(value.replace(",", "."));
+    const numeric = type === "percent" ? parseLocalizedDecimalInput(value) : parseBRLMoneyInput(value);
     if (type === "none") { onConfirm("none", 0); return; }
-    if (!Number.isFinite(numeric) || numeric < 0) return;
+    if (numeric === null || numeric < 0) return;
     if (type === "percent" && numeric > 100) return;
     if (type === "amount" && numeric > maxAmount) return;
     onConfirm(type, numeric);
