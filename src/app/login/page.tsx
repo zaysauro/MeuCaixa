@@ -102,10 +102,13 @@ function LoginForm() {
         }
       }
 
-      const { data: billing } = await supabase.rpc("get_my_billing_status");
-      const hasAccess = hasValidBillingAccess(billing?.[0]);
-      const destination = sanitizeLoginNext(next, hasAccess);
-      console.info("login access decision", { hasAccess, billingStatus: billing?.[0]?.status ?? "missing" });
+      const { data: access } = await supabase.rpc("get_my_company_access");
+      const currentAccess = access?.[0];
+      const hasAccess = currentAccess?.has_access === true || hasValidBillingAccess(currentAccess);
+      const destination = !hasAccess
+        ? currentAccess?.can_manage_billing ? "/dashboard/configuracoes/upgrade" : "/acesso-indisponivel"
+        : sanitizeLoginNext(next, hasAccess);
+      console.info("login access decision", { hasAccess, billingStatus: currentAccess?.status ?? "missing", accessReason: currentAccess?.access_reason ?? "missing" });
       window.location.assign(destination);
     } catch (error) {
       setMessage(

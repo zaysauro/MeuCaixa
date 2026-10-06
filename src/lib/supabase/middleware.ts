@@ -26,6 +26,29 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isBillingRoute = pathname === "/dashboard/configuracoes/upgrade";
+  const isAccessBlockedRoute = pathname === "/acesso-indisponivel";
+  if (isDashboardRoute && !isBillingRoute && !isAccessBlockedRoute) {
+    const { data: access, error: accessError } = await supabase.rpc("get_my_company_access");
+    const current = access?.[0];
+    if (user && accessError) {
+      const redirectResponse = NextResponse.redirect(new URL("/acesso-indisponivel", request.url));
+      response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+      return redirectResponse;
+    }
+    if (current && !current.has_access) {
+      const destination = current.can_manage_billing
+        ? "/dashboard/configuracoes/upgrade"
+        : "/acesso-indisponivel";
+      const redirectResponse = NextResponse.redirect(new URL(destination, request.url));
+      response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+      return redirectResponse;
+    }
+  }
+
   return response;
 }

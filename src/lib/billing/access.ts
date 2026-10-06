@@ -2,16 +2,30 @@ export type BillingAccess = {
   status?: string | null;
   payment_confirmed?: boolean | null;
   trial_ends_at?: string | null;
+  current_period_end?: string | null;
+  grace_until?: string | null;
   cancel_at_period_end?: boolean | null;
   access_until?: string | null;
 };
 
 export function hasValidBillingAccess(billing: BillingAccess | null | undefined, now = Date.now()) {
   if (!billing) return false;
-  if (billing.status === "active" && billing.payment_confirmed === true) {
-    return !billing.cancel_at_period_end || !billing.access_until || Date.parse(billing.access_until) > now;
+  const isFuture = (value?: string | null) => !value || Date.parse(value) > now;
+
+  if (billing.status === "trial") {
+    return Boolean(billing.trial_ends_at) && isFuture(billing.trial_ends_at);
   }
-  return billing.status === "trial" && Boolean(billing.trial_ends_at) && Date.parse(billing.trial_ends_at as string) > now;
+
+  if (billing.status === "active" && billing.payment_confirmed === true) {
+    return isFuture(billing.access_until) && isFuture(billing.current_period_end);
+  }
+
+  if ((billing.status === "canceled" || billing.status === "cancelled") && billing.cancel_at_period_end) {
+    const accessUntil = billing.access_until || billing.current_period_end;
+    return Boolean(accessUntil) && isFuture(accessUntil);
+  }
+
+  return billing.status === "past_due" && Boolean(billing.grace_until) && isFuture(billing.grace_until);
 }
 
 export function sanitizeLoginNext(value: string | null | undefined, hasAccess: boolean) {
