@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -90,6 +90,7 @@ export default function ProductsPage() {
   const [editMinimumStock, setEditMinimumStock] = useState("");
   const [scannerTarget, setScannerTarget] = useState<"new" | "edit" | null>(null);
   const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null);
+  const createRequestId = useRef(crypto.randomUUID());
   const supabase = createClient();
 
   async function load() {
@@ -124,6 +125,7 @@ export default function ProductsPage() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setMessage("");
     setDuplicateProduct(null);
@@ -158,11 +160,13 @@ export default function ProductsPage() {
       p_sale_price: moneyBR(price),
       p_initial_stock: numberBR(stock),
       p_minimum_stock: numberBR(minimumStock),
+      p_request_id: createRequestId.current,
     });
 
     if (error) setMessage(error.message);
     else {
       resetForm();
+      createRequestId.current = crypto.randomUUID();
       await load();
       setMessage("Produto cadastrado com sucesso.");
     }
@@ -189,7 +193,7 @@ export default function ProductsPage() {
 
   async function saveEdit(e: FormEvent) {
     e.preventDefault();
-    if (!editing) return;
+    if (!editing || savingEdit) return;
 
     setSavingEdit(true);
     setMessage("");
