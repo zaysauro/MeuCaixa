@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ContextHelp } from "@/components/ContextHelp";
 
 type Branch = {
   branch_id: string;
@@ -66,6 +67,7 @@ export default function FiliaisPage() {
             possui seu próprio caixa, estoque, vendas e resultados.
           </p>
         </div>
+        <ContextHelp title="Suas lojas" description="Organize sua matriz e suas filiais no mesmo sistema. Estoque, vendas e caixa podem ser acompanhados por unidade, mantendo a operação de cada loja organizada." />
       </div>
 
       {canManage && billing?.branch_count >= billing?.branch_limit && (

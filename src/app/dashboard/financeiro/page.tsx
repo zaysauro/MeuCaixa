@@ -48,9 +48,15 @@ export default function FinanceiroPage(){
   const [statusFilter,setStatusFilter]=useState("all");
   const [originFilter,setOriginFilter]=useState("all");
   const [loading,setLoading]=useState(true);
-  const [saving,setSaving]=useState(false);
+  const [savingEntry,setSavingEntry]=useState(false);
+  const [savingSettlement,setSavingSettlement]=useState(false);
+  const [savingCategory,setSavingCategory]=useState(false);
+  const [savingAccount,setSavingAccount]=useState(false);
+  const [savingMutation,setSavingMutation]=useState(false);
   const [savingRecurring,setSavingRecurring]=useState(false);
   const [savingSupplier,setSavingSupplier]=useState(false);
+  const saving = savingEntry || savingSettlement || savingCategory || savingAccount || savingMutation || savingRecurring || savingSupplier;
+  const setSaving = setSavingMutation;
   const [msg,setMsg]=useState("");
   const [error,setError]=useState("");
   const [settle,setSettle]=useState<Entry|null>(null);
@@ -120,51 +126,54 @@ export default function FinanceiroPage(){
   }
 
   async function createEntry(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSaving(true);setError("");
-    const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
-    const amount=parseBRLMoneyInput(String(f.get("amount")));if(amount===null||amount<=0){setError("Informe um valor válido maior que zero.");setSaving(false);return;}
-    const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:amount,p_due_date:String(f.get("due_date"))||String(f.get("competence_date"))||today(),p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
-    if(e2)setError(e2.message);else{setMsg("Lançamento criado.");e.currentTarget.reset();await load();}setSaving(false);
+    e.preventDefault();if(savingEntry)return;setSavingEntry(true);setError("");
+    try {
+      const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
+      const amount=parseBRLMoneyInput(String(f.get("amount")));if(amount===null||amount<=0){setError("Informe um valor válido maior que zero.");return;}
+      const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:amount,p_due_date:String(f.get("due_date"))||String(f.get("competence_date"))||today(),p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
+      if(e2){setError(e2.message);return;}setMsg("Lançamento criado.");e.currentTarget.reset();setShowEntry(false);await load();
+    } catch (error) { setError(error instanceof Error ? error.message : "Não foi possível salvar o lançamento."); }
+    finally { setSavingEntry(false); }
   }
 
   async function settleEntry(){
-    if(!settle)return;setSaving(true);setError("");
+    if(!settle||savingSettlement)return;setSavingSettlement(true);setError("");
     const amount=parseBRLMoneyInput(settleAmount);const interest=parseBRLMoneyInput(settleInterest)??0;const fine=parseBRLMoneyInput(settleFine)??0;const discount=parseBRLMoneyInput(settleDiscount)??0;
-    if(amount===null||amount<=0||interest<0||fine<0||discount<0){setError("Informe valores financeiros válidos.");setSaving(false);return;}
+    if(amount===null||amount<=0||interest<0||fine<0||discount<0){setError("Informe valores financeiros válidos.");setSavingSettlement(false);return;}
     const {error:e}=await supabase.rpc("finance_settle",{p_entry_id:settle.id,p_amount:amount,p_payment_method:settleMethod,p_financial_account_id:settleAccount||null,p_interest:interest,p_fine:fine,p_discount:discount,p_idempotency_key:crypto.randomUUID(),p_settled_at:new Date().toISOString(),p_notes:null});
-    if(e)setError(e.message);else{setMsg("Baixa registrada.");setSettle(null);await load();}setSaving(false);
+    if(e)setError(e.message);else{setMsg("Baixa registrada.");setSettle(null);await load();}setSavingSettlement(false);
   }
 
   async function reverseEntry(entry:Entry){
     const {data,error:e}=await supabase.from("finance_settlements").select("id,settled_at,amount,settlement_type").eq("entry_id",entry.id).in("settlement_type",["payment","receipt"]).order("settled_at",{ascending:false}).limit(1).maybeSingle();
     if(e){setError(e.message);return;} if(!data){setError("Nenhuma baixa encontrada para estornar.");return;}
     const reason=window.prompt("Motivo do estorno:");if(reason===null)return;
-    setSaving(true);setError("");
+    setSavingMutation(true);setError("");
     const {error:e2}=await supabase.rpc("finance_reverse_settlement",{p_settlement_id:data.id,p_idempotency_key:crypto.randomUUID(),p_reason:reason});
-    if(e2)setError(e2.message);else{setMsg("Estorno registrado.");await load();}setSaving(false);
+    if(e2)setError(e2.message);else{setMsg("Estorno registrado.");await load();}setSavingMutation(false);
   }
 
   async function cancelEntry(entry:Entry){
     const reason=window.prompt("Motivo do cancelamento:");if(reason===null)return;
-    setSaving(true);setError("");
+    setSavingMutation(true);setError("");
     const {error:e}=await supabase.rpc("finance_cancel_entry",{p_entry_id:entry.id,p_reason:reason});
-    if(e)setError(e.message);else{setMsg("Lançamento cancelado.");await load();}setSaving(false);
+    if(e)setError(e.message);else{setMsg("Lançamento cancelado.");await load();}setSavingMutation(false);
   }
 
   async function createAccount(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSaving(true);setError("");const f=new FormData(e.currentTarget);
-    const openingRaw=String(f.get("opening_balance")||"");const opening=openingRaw.trim()?parseBRLMoneyInput(openingRaw):0;if(opening===null||opening<0){setError("O saldo inicial informado é inválido.");setSaving(false);return;}
+    e.preventDefault();setSavingAccount(true);setError("");const f=new FormData(e.currentTarget);
+    const openingRaw=String(f.get("opening_balance")||"");const opening=openingRaw.trim()?parseBRLMoneyInput(openingRaw):0;if(opening===null||opening<0){setError("O saldo inicial informado é inválido.");setSavingAccount(false);return;}
     const {error:e2}=await supabase.rpc("finance_create_account",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_opening_balance:opening,p_opening_balance_date:String(f.get("opening_balance_date"))||today()});
-    if(e2)setError(e2.message);else{setMsg("Conta financeira criada.");e.currentTarget.reset();await load();}setSaving(false);
+    if(e2)setError(e2.message);else{setMsg("Conta financeira criada.");e.currentTarget.reset();await load();}setSavingAccount(false);
   }
 
   async function createCategory(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSaving(true);setError("");const f=new FormData(e.currentTarget);
+    e.preventDefault();setSavingCategory(true);setError("");const f=new FormData(e.currentTarget);
     const {error:e2}=await supabase.rpc("finance_create_category",{p_organization_id:org,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_statement_group:null});
     if(e2)setError(e2.message);else{
       const {data:newCats}=await supabase.from("finance_categories").select("id,name,kind,statement_group").eq("organization_id",org).eq("active",true).order("name");
       setCategories((newCats||[]) as Category[]);setMsg("Categoria criada.");setShowNewCategory(false);e.currentTarget.reset();
-    }setSaving(false);
+    }setSavingCategory(false);
   }
 
   async function createRecurring(e:FormEvent<HTMLFormElement>){
@@ -187,17 +196,17 @@ export default function FinanceiroPage(){
   }
 
   async function saveCategory(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();if(!editingCategory)return;setSaving(true);setError("");const f=new FormData(e.currentTarget);
+    e.preventDefault();if(!editingCategory)return;setSavingCategory(true);setError("");const f=new FormData(e.currentTarget);
     const {error:e2}=await supabase.rpc("finance_update_category",{p_category_id:editingCategory.id,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_statement_group:String(f.get("statement_group"))||null});
-    if(e2)setError(e2.message);else{setEditingCategory(null);setMsg("Categoria atualizada.");await load();}setSaving(false);
+    if(e2)setError(e2.message);else{setEditingCategory(null);setMsg("Categoria atualizada.");await load();}setSavingCategory(false);
   }
-  async function deleteCategory(c:Category){if(!confirm("Excluir esta categoria? Lançamentos antigos serão preservados."))return;setSaving(true);const {error:e}=await supabase.rpc("finance_delete_category",{p_category_id:c.id});if(e)setError(e.message);else{setCategories(x=>x.filter(v=>v.id!==c.id));setMsg("Categoria excluída.");}setSaving(false);}
-  async function saveSupplier(e:FormEvent<HTMLFormElement>){e.preventDefault();if(!editingSupplier)return;setSaving(true);const f=new FormData(e.currentTarget);const {error:e2}=await supabase.rpc("finance_update_supplier",{p_supplier_id:editingSupplier.id,p_name:String(f.get("name")),p_document:String(f.get("document"))||null,p_phone:String(f.get("phone"))||null,p_email:String(f.get("email"))||null});if(e2)setError(e2.message);else{setEditingSupplier(null);setMsg("Fornecedor atualizado.");await load();}setSaving(false);}
-  async function deleteSupplier(x:Person){if(!confirm("Excluir este fornecedor? O histórico financeiro será preservado."))return;setSaving(true);const {error:e}=await supabase.rpc("finance_delete_supplier",{p_supplier_id:x.id});if(e)setError(e.message);else{setSuppliers(v=>v.filter(y=>y.id!==x.id));setMsg("Fornecedor excluído.");}setSaving(false);}
+  async function deleteCategory(c:Category){if(!confirm("Excluir esta categoria? Lançamentos antigos serão preservados."))return;setSavingCategory(true);const {error:e}=await supabase.rpc("finance_delete_category",{p_category_id:c.id});if(e)setError(e.message);else{setCategories(x=>x.filter(v=>v.id!==c.id));setMsg("Categoria excluída.");}setSavingCategory(false);}
+  async function saveSupplier(e:FormEvent<HTMLFormElement>){e.preventDefault();if(!editingSupplier)return;setSavingMutation(true);const f=new FormData(e.currentTarget);const {error:e2}=await supabase.rpc("finance_update_supplier",{p_supplier_id:editingSupplier.id,p_name:String(f.get("name")),p_document:String(f.get("document"))||null,p_phone:String(f.get("phone"))||null,p_email:String(f.get("email"))||null});if(e2)setError(e2.message);else{setEditingSupplier(null);setMsg("Fornecedor atualizado.");await load();}setSavingMutation(false);}
+  async function deleteSupplier(x:Person){if(!confirm("Excluir este fornecedor? O histórico financeiro será preservado."))return;setSavingMutation(true);const {error:e}=await supabase.rpc("finance_delete_supplier",{p_supplier_id:x.id});if(e)setError(e.message);else{setSuppliers(v=>v.filter(y=>y.id!==x.id));setMsg("Fornecedor excluído.");}setSavingMutation(false);}
   async function deleteEntry(x:Entry){if(!confirm("Excluir/cancelar este lançamento?"))return;await cancelEntry(x);}
   async function toggleRecurring(t:Recurring){
-    setSaving(true);setError("");const {error:e}=await supabase.rpc("finance_set_recurring_active",{p_template_id:t.id,p_active:!t.active});
-    if(e)setError(e.message);else await load();setSaving(false);
+    setSavingMutation(true);setError("");const {error:e}=await supabase.rpc("finance_set_recurring_active",{p_template_id:t.id,p_active:!t.active});
+    if(e)setError(e.message);else await load();setSavingMutation(false);
   }
 
   function openSettlement(e:Entry){
