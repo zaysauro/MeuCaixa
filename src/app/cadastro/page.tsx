@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Check, LockKeyhole, Store } from "lucide-react";
+import PasswordField from "@/components/PasswordField";
 
 function CadastroForm() {
   const searchParams = useSearchParams();
@@ -12,6 +13,8 @@ function CadastroForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,10 +23,10 @@ function CadastroForm() {
     const name = String(form.get("name") || "").trim();
     const company = String(form.get("company") || "").trim();
     const email = String(form.get("email") || "").trim();
-    const password = String(form.get("password") || "");
     if (!name || !company || !email || password.length < 8) {
       setError("Preencha os campos. A senha deve ter pelo menos 8 caracteres."); setLoading(false); return;
     }
+    if (password !== confirmPassword) { setError("As senhas não coincidem."); setLoading(false); return; }
 
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -115,7 +118,8 @@ function CadastroForm() {
               <label>Seu nome<input className="field" name="name" autoComplete="name" placeholder="Como devemos chamar você?" required /></label>
               <label>Nome da empresa<input className="field" name="company" autoComplete="organization" placeholder="Ex.: Mercado Central" required /></label>
               <label>E-mail<input className="field" name="email" type="email" autoComplete="email" placeholder="voce@empresa.com.br" required /></label>
-              <label>Senha<input className="field" name="password" type="password" autoComplete="new-password" minLength={8} placeholder="Mínimo de 8 caracteres" required /></label>
+              <PasswordField label="Senha" value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password" minLength={8} required />
+              <PasswordField label="Confirmar senha" value={confirmPassword} confirmValue={password} onChange={event => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} required />
               <button className="button primary signup-submit" disabled={loading} type="submit">{loading ? "Criando sua conta..." : subscribe ? "Criar conta e continuar" : "Começar meus 7 dias grátis"}</button>
             </form>
             {error ? <div className="error signup-feedback">{error}</div> : null}

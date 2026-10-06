@@ -3,6 +3,8 @@
 import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
+import PasswordField from "@/components/PasswordField";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -122,15 +124,7 @@ function LoginForm() {
             autoComplete="email"
             required
           />
-          <input
-            className="field"
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
+          <PasswordField label="Senha" className="login-password-field" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
         </div>
 
         {message && <div className="error">{message}</div>}
@@ -138,6 +132,7 @@ function LoginForm() {
         <button className="button primary login-button" disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </button>
+        <Link href="/esqueci-senha" className="login-forgot">Esqueci minha senha</Link>
       </form>
     </main>
   );
