@@ -35,9 +35,6 @@ export type CashSummary = {
   terminalNumber: number;
   terminalName: string | null;
   openedBy: string | null;
-  employeeId: string | null;
-  employeeName: string | null;
-  employeeTitle: string | null;
   openedAt: string;
   openingBalance: number;
   cashSales: number;
@@ -72,9 +69,6 @@ export type CashHistoryItem = {
   terminal_name: string | null;
   status: CashStatus;
   opened_by: string | null;
-  employee_id: string | null;
-  employee_name: string | null;
-  employee_title: string | null;
   opened_at: string;
   opening_balance: number;
   closed_by: string | null;
