@@ -67,6 +67,9 @@ export async function POST(request: Request) {
       asaas_checkout_id: checkout.id,
       status: entitlement.status === "trial" ? "trial" : "pending",
       payment_confirmed: false,
+      cancel_at_period_end: false,
+      canceled_at: null,
+      access_until: null,
     }).eq("organization_id", current.organization_id);
 
     return NextResponse.json({ url: checkoutUrl, checkoutId: checkout.id });

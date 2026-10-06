@@ -32,6 +32,10 @@ async function asaasRequest<T>(path: string, init: RequestInit = {}) {
   } finally { clearTimeout(timeout); }
 }
 
+export function cancelAsaasSubscription(subscriptionId: string) {
+  return asaasRequest<{ id?: string }>(`/subscriptions/${encodeURIComponent(subscriptionId)}`, { method: "DELETE" });
+}
+
 export type AsaasCheckout = {
   id: string;
   link?: string;

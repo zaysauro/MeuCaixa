@@ -46,6 +46,13 @@ export async function POST(request: Request) {
     await admin.from("billing_events").update({ error: error.message }).eq("provider_event_id", payload.id);
     return NextResponse.json({ error: "Event processing failed" }, { status: 500 });
   }
+  if (payload.event === "SUBSCRIPTION_DELETED" || payload.event === "SUBSCRIPTION_INACTIVATED") {
+    const subscriptionId = payload.subscription?.id || payload.payment?.subscription;
+    if (subscriptionId) {
+      const { data: existing } = await admin.from("organization_entitlements").select("organization_id,current_period_end,access_until,canceled_at").eq("asaas_subscription_id", subscriptionId).maybeSingle();
+      if (existing?.organization_id) await admin.from("organization_entitlements").update({ status: "active", payment_confirmed: true, cancel_at_period_end: true, canceled_at: existing.canceled_at || new Date().toISOString(), access_until: existing.access_until || existing.current_period_end || new Date().toISOString(), updated_at: new Date().toISOString() }).eq("organization_id", existing.organization_id);
+    }
+  }
   return NextResponse.json({ received: true, duplicate: data?.duplicate === true });
 }
 

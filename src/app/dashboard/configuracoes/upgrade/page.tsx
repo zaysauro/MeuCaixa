@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
 import { hasValidBillingAccess } from "@/lib/billing/access";
+import { CancelSubscriptionButton } from "@/components/billing/CancelSubscriptionButton";
 
 const brl = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const dateBR = (value?: string | null) => value ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value)) : "—";
@@ -18,7 +19,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
   const organizationId = org[0].organization_id;
 
   const { data: entitlement } = organizationId
-    ? await supabase.from("organization_entitlements").select("trial_started_at,trial_ends_at").eq("organization_id", organizationId).maybeSingle()
+    ? await supabase.from("organization_entitlements").select("trial_started_at,trial_ends_at,cancel_at_period_end,canceled_at,access_until").eq("organization_id", organizationId).maybeSingle()
     : { data: null };
 
   const { data: organization } = organizationId
@@ -39,7 +40,8 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
     cancelled: "Assinatura cancelada",
     canceled: "Assinatura cancelada",
   };
-  const statusLabel = statusLabels[status] || "Status de cobrança desconhecido";
+  const canceling = current?.cancel_at_period_end === true;
+  const statusLabel = canceling ? "Cancelamento agendado" : statusLabels[status] || "Status de cobrança desconhecido";
   const basePrice = Number(organization?.base_monthly_price ?? 79.99);
   const branchPrice = Number(organization?.additional_branch_price ?? 50);
   const branchCount = Number(current?.branch_count ?? 1);
@@ -82,8 +84,10 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
         <h2>Assinatura MeuCaixa</h2>
         <p>Plano base de {brl(basePrice)}/mês para a matriz. Cada filial adicional custa {brl(branchPrice)}/mês. Pagamento por Pix, boleto ou cartão processado pelo Asaas.</p>
         {status === "trial" && <p style={{ marginTop: 10 }}>Você pode assinar antes do fim do teste. Assim que o pagamento for confirmado, o status muda para <strong>Assinatura ativa</strong>.</p>}
-        {status === "active" ? <div className="success" style={{ marginTop: 16 }}>Pagamento confirmado. Nenhuma ação necessária.</div> : billingEnabled && showCheckout ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} autoStart={params.autocheckout === "1"} /></div> : <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
+        {canceling && <div className="success" style={{ marginTop: 16 }}>A renovação foi cancelada. Seu acesso permanece até {dateBR(current?.access_until || current?.current_period_end)}.</div>}
+        {status === "active" && !canceling ? <div style={{ marginTop: 16 }}><div className="success">Pagamento confirmado. Nenhuma ação necessária.</div><div style={{ marginTop: 14 }}><CancelSubscriptionButton /></div></div> : billingEnabled && showCheckout && !canceling ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} autoStart={params.autocheckout === "1"} /></div> : !canceling && <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
       </div>
+      <p className="sub" style={{ marginTop: 14 }}><a href="https://sistemakumo.com.br/termos" target="_blank" rel="noreferrer">Termos de Uso</a> · <a href="https://sistemakumo.com.br/privacidade" target="_blank" rel="noreferrer">Política de Privacidade</a></p>
       <Link href="/dashboard/configuracoes">Voltar para configurações</Link>
     </div>
   );

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaas";
 
-type SubscribeSignupBody = { userId?: string; email?: string; company?: string };
+type SubscribeSignupBody = { userId?: string; email?: string; company?: string; acceptedTerms?: boolean };
 
 function normalizeCompanyName(value: unknown) {
   return String(value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
@@ -13,8 +13,9 @@ export async function POST(request: Request) {
   const userId = String(body?.userId || "").trim();
   const email = String(body?.email || "").trim().toLowerCase();
   const company = String(body?.company || "").trim();
+  const acceptedTerms = body?.acceptedTerms === true;
 
-  if (!userId || !email || !company) {
+  if (!userId || !email || !company || !acceptedTerms) {
     return NextResponse.json({ error: "Dados de assinatura incompletos." }, { status: 400 });
   }
 
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ error: "Não foi possível preparar sua assinatura." }, { status: 500 });
   }
+  await admin.from("legal_acceptances").upsert({ user_id: user.id, organization_id: organizationId, terms_version: "2026-10-06", privacy_version: "2026-10-06", source: "paid_signup" }, { onConflict: "user_id,terms_version,privacy_version" });
 
   const { data: entitlement } = await admin.from("organization_entitlements").select("status,asaas_checkout_id").eq("organization_id", organizationId).maybeSingle();
   if (entitlement?.status === "pending" && entitlement.asaas_checkout_id) {
