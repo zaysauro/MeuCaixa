@@ -914,7 +914,10 @@ select.field{appearance:auto}
 .stock-alert-close{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(180,35,24,.22);background:rgba(255,255,255,.8);color:#a52a22;display:grid;place-items:center;cursor:pointer;transition:background .18s ease,transform .18s ease}
 .stock-alert-close:hover{background:#ffe8e5;transform:scale(1.06)}
 
-/* Mobile dashboard shell: keep the desktop sidebar intact and use a touch drawer below 900px. */
+/* Mobile dashboard shell: keep mobile markup out of the desktop layout. */
+.mobile-dashboard-header,.mobile-dashboard-drawer,.mobile-nav-backdrop{display:none}
+
+/* Keep the desktop sidebar intact and use a touch drawer below 900px. */
 @media (max-width:900px) {
   .app-shell { display:block; width:100%; max-width:100%; min-width:0; }
   .sidebar { display:none; }
