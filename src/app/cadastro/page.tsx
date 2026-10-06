@@ -36,7 +36,7 @@ function CadastroForm() {
       email,
       password,
       options: {
-        emailRedirectTo: `${getPublicSiteUrl()}/login`,
+        emailRedirectTo: `${getPublicSiteUrl()}/auth/callback?flow=signup`,
         data: {
           full_name: name,
           company_name: company,

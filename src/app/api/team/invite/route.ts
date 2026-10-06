@@ -22,10 +22,20 @@ async function sendInvite(request: Request, body: InviteBody, inviteId?: string)
   const id = inviteId || String(inviteIdData);
   try {
     const admin = createAdminClient();
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, invited_organization_id: organizationId }, redirectTo: `${getPublicSiteUrl(request.url)}/convite` });
-    if (error) throw error;
-    await admin.from("team_invites").update({ auth_user_id: data.user.id, updated_at: new Date().toISOString() }).eq("id", id);
-    return NextResponse.json({ ok: true });
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName, invited_organization_id: organizationId }, redirectTo: `${getPublicSiteUrl(request.url)}/auth/callback?flow=invite` });
+    if (!error && data.user) {
+      await admin.from("team_invites").update({ auth_user_id: data.user.id, updated_at: new Date().toISOString() }).eq("id", id);
+      return NextResponse.json({ ok: true });
+    }
+
+    const existing = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = existing.data.users.find((candidate) => candidate.email?.toLowerCase() === email);
+    if (existingUser) {
+      await admin.from("team_invites").update({ auth_user_id: existingUser.id, updated_at: new Date().toISOString() }).eq("id", id);
+      return NextResponse.json({ ok: true, existingUser: true });
+    }
+
+    throw error || new Error("Não foi possível enviar o convite.");
   } catch (error) {
     await supabase.rpc("team_cancel_invite", { p_invite_id: id });
     return NextResponse.json({ error: error instanceof Error ? error.message : "Não foi possível enviar o convite." }, { status: 502 });

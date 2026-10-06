@@ -11,9 +11,11 @@ import { getPublicSiteUrl } from "@/lib/site-url";
 function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
+  const confirmed = searchParams.get("confirmed") === "1";
+  const authError = searchParams.get("auth_error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(confirmed ? "E-mail confirmado com sucesso. Entre na sua conta para continuar." : authError || "");
   const [loading, setLoading] = useState(false);
   const [canResendConfirmation, setCanResendConfirmation] = useState(false);
 
@@ -61,6 +63,11 @@ function LoginForm() {
       const { data: userData } = await supabase.auth.getUser();
       const metadata = userData.user?.user_metadata ?? {};
       const { data: organization } = await supabase.rpc("get_my_organization");
+
+      if (next === "/convite") {
+        window.location.assign("/convite");
+        return;
+      }
 
       if (!organization?.length && metadata.company_name) {
         const { error: onboardingError } = await supabase.rpc("complete_onboarding", {
@@ -116,7 +123,7 @@ function LoginForm() {
     const { error } = await createClient().auth.resend({
       type: "signup",
       email: email.trim(),
-      options: { emailRedirectTo: `${getPublicSiteUrl()}/login` },
+      options: { emailRedirectTo: `${getPublicSiteUrl()}/auth/callback?flow=signup` },
     });
     setMessage(error ? "Não foi possível reenviar o e-mail de confirmação." : "Enviamos um novo e-mail de confirmação para você.");
     setLoading(false);
