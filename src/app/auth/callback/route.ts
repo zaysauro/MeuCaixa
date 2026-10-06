@@ -24,12 +24,23 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
   const authType = request.nextUrl.searchParams.get("type");
+  const providerError = request.nextUrl.searchParams.get("error_code") || request.nextUrl.searchParams.get("error");
+  const providerErrorDescription = request.nextUrl.searchParams.get("error_description");
   const flow = getFlow(request.nextUrl.searchParams.get("flow"), authType);
   const supabase = await createClient();
 
+  if (providerError) {
+    return NextResponse.redirect(getDestination(request, flow, providerErrorDescription || "Este link é inválido ou expirou."));
+  }
+
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) return NextResponse.redirect(getDestination(request, flow, "Não foi possível validar este link."));
+    if (error) {
+      console.error("Auth callback session exchange failed", { flow, authType, error: error.message });
+      // Supabase confirms the signup before issuing the code. A PKCE/session
+      // exchange failure must not turn a successful confirmation into a false error.
+      if (flow !== "signup") return NextResponse.redirect(getDestination(request, flow, "Não foi possível validar este link."));
+    }
   } else if (tokenHash) {
     const supportedTypes: EmailOtpType[] = ["signup", "invite", "recovery", "email_change", "email"];
     if (!authType || !supportedTypes.includes(authType as EmailOtpType)) {

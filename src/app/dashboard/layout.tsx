@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CircleHelp, LogOut } from "lucide-react";
 import { canAccessRoute } from "@/lib/rbac";
 import DashboardNav from "@/components/DashboardNav";
+import MobileDashboardNav from "@/components/MobileDashboardNav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -30,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="app-shell">
+      <MobileDashboardNav items={navItems.filter(([,href])=>canAccessRoute(role,href))} organizationName={String(org[0].organization_name || "Empresa")} branchName={String(org[0].branch_name || "Matriz")} role={role} />
       <aside className="sidebar">
         <Link href="/dashboard" className="brand">
           <img className="kumo-logo kumo-logo-sidebar" src="/kumo-logo.svg" alt="Kumo — Soluções em Tecnologia" />
