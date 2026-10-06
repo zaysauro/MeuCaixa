@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Check, LockKeyhole, Store } from "lucide-react";
 import PasswordField from "@/components/PasswordField";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 function CadastroForm() {
   const searchParams = useSearchParams();
@@ -35,7 +36,7 @@ function CadastroForm() {
       email,
       password,
       options: {
-        emailRedirectTo: "https://meucaixa.sistemakumo.com.br/login",
+        emailRedirectTo: `${getPublicSiteUrl()}/login`,
         data: {
           full_name: name,
           company_name: company,
@@ -86,7 +87,7 @@ function CadastroForm() {
     if (onboardingError) { setError("Sua conta foi criada, mas não conseguimos criar a empresa. Entre novamente para concluir o cadastro."); setLoading(false); return; }
 
     const { error: trialError } = await supabase.rpc("start_my_trial");
-    if (trialError) { setError("Empresa criada, mas não conseguimos iniciar o teste grátis. Tente entrar novamente."); setLoading(false); return; }
+    if (trialError) { setError("Não foi possível concluir a configuração da sua conta. Tente novamente ou entre em contato com o suporte."); setLoading(false); return; }
     const { data: createdOrg } = await supabase.rpc("get_my_organization");
     const acceptedUserId = data.user?.id;
     if (acceptedUserId) await supabase.from("legal_acceptances").upsert({ user_id: acceptedUserId, organization_id: createdOrg?.[0]?.organization_id ?? null, terms_version: "2026-10-06", privacy_version: "2026-10-06", source: "trial_signup" }, { onConflict: "user_id,terms_version,privacy_version" });

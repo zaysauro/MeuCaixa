@@ -3,6 +3,7 @@ import { calculateMonthlyPrice, createRecurringCheckout, getAsaasCheckoutUrl } f
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasValidBillingAccess } from "@/lib/billing/access";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     Number(organization.additional_branch_price ?? 50)
   );
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
+  const siteUrl = getPublicSiteUrl(request.url);
   try {
     const checkout = await createRecurringCheckout({
       externalReference: current.organization_id,

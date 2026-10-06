@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaas";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 type SubscribeSignupBody = { userId?: string; email?: string; company?: string; acceptedTerms?: boolean };
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: getAsaasCheckoutUrl({ id: entitlement.asaas_checkout_id }) });
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin).replace(/\/$/, "");
+  const siteUrl = getPublicSiteUrl(request.url);
   try {
     const checkout = await createRecurringCheckout({
       externalReference: organizationId,

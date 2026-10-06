@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import PasswordField from "@/components/PasswordField";
 import { hasValidBillingAccess, sanitizeLoginNext } from "@/lib/billing/access";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canResendConfirmation, setCanResendConfirmation] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -21,6 +23,7 @@ function LoginForm() {
 
     setLoading(true);
     setMessage("");
+    setCanResendConfirmation(false);
 
     try {
       const supabase = createClient();
@@ -45,7 +48,12 @@ function LoginForm() {
       const { error } = await Promise.race([signIn, timeout]);
 
       if (error) {
-        setMessage(error.message);
+        if (error.code === "email_not_confirmed" || error.message.toLowerCase().includes("email not confirmed")) {
+          setMessage("Confirme seu e-mail para continuar. Enviamos um link de confirmação para você.");
+          setCanResendConfirmation(true);
+        } else {
+          setMessage("Não foi possível entrar. Verifique seu e-mail e sua senha.");
+        }
         setLoading(false);
         return;
       }
@@ -67,7 +75,7 @@ function LoginForm() {
         if (metadata.signup_mode !== "subscribe") {
           const { error: trialError } = await supabase.rpc("start_my_trial");
           if (trialError) {
-            setMessage("Empresa criada, mas não conseguimos iniciar o período experimental.");
+            setMessage("Não foi possível concluir a configuração da sua conta. Tente novamente ou entre em contato com o suporte.");
             setLoading(false);
             return;
           }
@@ -76,10 +84,11 @@ function LoginForm() {
 
       if (organization?.length && metadata.signup_mode === "trial") {
         const { data: billing } = await supabase.rpc("get_my_billing_status");
-        if (billing?.[0]?.status === "base") {
+        const billingStatus = billing?.[0]?.status;
+        if (!billing?.length || billingStatus === "base" || billingStatus === "trial") {
           const { error: trialError } = await supabase.rpc("start_my_trial");
           if (trialError) {
-            setMessage("Não conseguimos iniciar o período experimental.");
+            setMessage("Não foi possível concluir a configuração da sua conta. Tente novamente ou entre em contato com o suporte.");
             setLoading(false);
             return;
           }
@@ -99,6 +108,18 @@ function LoginForm() {
       );
       setLoading(false);
     }
+  }
+
+  async function resendConfirmation() {
+    if (loading || !email.trim()) return;
+    setLoading(true);
+    const { error } = await createClient().auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: `${getPublicSiteUrl()}/login` },
+    });
+    setMessage(error ? "Não foi possível reenviar o e-mail de confirmação." : "Enviamos um novo e-mail de confirmação para você.");
+    setLoading(false);
   }
 
   return (
@@ -130,6 +151,7 @@ function LoginForm() {
         </div>
 
         {message && <div className="error">{message}</div>}
+        {canResendConfirmation && <button className="login-links" type="button" onClick={resendConfirmation}>Reenviar e-mail de confirmação</button>}
 
         <button className="button primary login-button" disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
