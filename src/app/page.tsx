@@ -22,9 +22,7 @@ import {
 
 const { whatsappNumber, email: contactEmail } = marketingContact;
 const whatsappHref = `https://wa.me/${whatsappNumber}`;
-const TRIAL_DAYS = "7";
-const SHOW_LAUNCH_PROGRAM = false; // TODO: ativar somente após confirmar o programa comercial.
-const GUARANTEES = ["Acesso pelo navegador", "Suporte direto com a equipe"] as const; // TODO: confirmar política e canais.
+const GUARANTEES = ["Suporte direto com a equipe"] as const;
 const FAQS = [
   ["Quanto custa o MeuCaixa?", "R$ 79,99/mês para a operação inicial + R$ 50,00/mês por filial adicional."],
   ["Posso começar com apenas uma loja?", "Sim. Comece com uma unidade e adicione outras quando sua empresa crescer."],
@@ -33,13 +31,12 @@ const FAQS = [
   ["Posso transferir produtos entre lojas?", "Sim. O módulo de estoque possui fluxo de transferência entre filiais."],
   ["Preciso trocar de sistema quando abrir outra loja?", "Não. A proposta do MeuCaixa é acompanhar o crescimento da empresa dentro do mesmo ecossistema."],
   ["Posso testar antes de pagar?", "Sim. Crie sua conta e teste o MeuCaixa grátis por 7 dias antes de assinar."],
-  ["Como pago?", "A assinatura mensal é processada pelo Asaas. As formas disponíveis são apresentadas no momento da cobrança."],
-  ["Tem fidelidade? Posso cancelar quando quiser?", "TODO: confirmar a política de cancelamento antes de publicar esta resposta."],
+  ["Como pago?", "Aceitamos Pix, boleto, cartão de crédito e outras formas disponíveis no momento da cobrança. A assinatura mensal é processada pelo Asaas e as opções de pagamento são apresentadas durante a contratação."],
+  ["Tem fidelidade? Posso cancelar quando quiser?", "Não há fidelidade. Você pode cancelar sua assinatura a qualquer momento, sem burocracia. Após o cancelamento, não haverá novas renovações e, quando houver um período já pago, seu acesso permanece disponível até o fim desse período."],
   ["Funciona no celular e no computador do balcão?", "Sim. O MeuCaixa funciona pelo navegador; a experiência pode variar conforme o tamanho da tela."],
-  ["Funciona com leitor de código de barras?", "A câmera do celular é compatível com leitura de códigos. Leitor USB: confirmar compatibilidade específica."],
-  ["Emite nota fiscal?", "TODO: confirmar o estado atual da emissão fiscal. Não oferecemos essa promessa nesta página."],
-  ["Consigo importar meus produtos de uma planilha?", "TODO: confirmar se a importação está disponível no produto atual."],
-  ["Meus dados estão seguros?", "O sistema separa organizações e permissões com autenticação e políticas RLS no Supabase. Nenhuma solução deve ser descrita como risco zero."],
+  ["Funciona com leitor de código de barras?", "Sim. Webcams e câmeras de smartphones são compatíveis com a leitura de códigos de barras. Alguns modelos de leitores USB também já são compatíveis. Para utilizar um leitor específico, entre em contato com o suporte para verificarmos a compatibilidade e, quando necessário, avaliarmos a integração."],
+  ["Consigo importar meus produtos de uma planilha?", "Sim! Você pode importar seus produtos por planilha. Em caso de dúvida, entre em contato com o suporte para realizar essa importação."],
+  ["Meus dados estão seguros?", "Sim. Seus dados são protegidos com controles de acesso e cada empresa possui um ambiente separado dentro do sistema. Também adotamos boas práticas de segurança para proteger as informações da sua empresa e dos seus usuários."],
   ["Quantos usuários e filiais posso ter?", "O plano base começa com uma empresa e os limites exibidos no sistema. Consulte a equipe para necessidades de múltiplas filiais."],
   ["Quem me ajuda se eu tiver dificuldade?", "Fale diretamente com a equipe pelos canais de contato disponíveis nesta página."],
 ] as const;
@@ -106,7 +103,7 @@ export default function Home() {
 
           <h1>
             Venda, estoque e caixa em um só sistema.
-            <span> A partir de R$ 79,99 por mês.</span>
+            <span> A partir de <span className="price-unit">R$ 79,99</span> por mês.</span>
           </h1>
 
           <p className="hero-lead">
@@ -118,7 +115,7 @@ export default function Home() {
             <div className="hero-offer-price">
               <small>planos a partir de</small>
               <strong>
-                <sup>R$</sup>79,99
+                <span className="price-unit"><sup>R$</sup>79,99</span>
               </strong>
               <span>/mês · por empresa</span>
             </div>
@@ -127,23 +124,14 @@ export default function Home() {
               <span>Adicione filiais quando o seu comércio crescer.</span>
             </div>
           </div>
-          <p className="audience-note-v2"><strong>Pensado para:</strong> mercadinhos, lojas de roupas, papelarias, assistências e lanchonetes.</p>
+          <p className="audience-note-v2"><strong>Feito para:</strong> pequenas e médias empresas, de todos os tipos de comércio.</p>
 
           <div className="hero-actions-v2">
             
             <Link href="/cadastro" className="button primary hero-cta" data-track="trial_request_click" data-position="hero">
               Testar grátis por 7 dias <ArrowRight size={17} />
             </Link>
-            <a
-              href="#recursos"
-              className="button secondary hero-secondary"
-            >
-              Conhecer o sistema
-            </a>
           </div>
-          <Link className="marketing-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="hero">
-            Crie sua conta agora — 7 dias grátis
-          </Link>
 
           <div className="hero-trust">
             <span>
@@ -315,25 +303,25 @@ export default function Home() {
           <span className="section-kicker">DO BALCÃO AO FINANCEIRO</span>
           <h2>Uma operação que conversa entre si.</h2>
           <p>
-            Venda um produto e o estoque acompanha. Movimente o caixa e o
-            financeiro registra. Tudo dentro do mesmo sistema.
+            Venda um produto e o estoque acompanha. Movimente o caixa e acompanhe o
+            financeiro. Tudo dentro do mesmo sistema.
           </p>
 
           <div className="workflow-list">
             <div>
               <span>01</span>
-              <strong>Fale com a gente ou peça o teste</strong>
-              <p>A equipe orienta o próximo passo sem prometer prazo ou duração.</p>
+              <strong>Crie sua conta</strong>
+              <p>Faça seu cadastro e comece seu teste grátis de 7 dias.</p>
             </div>
             <div>
               <span>02</span>
-              <strong>Criamos o acesso da sua empresa</strong>
-              <p>Você recebe a orientação inicial para entrar no sistema.</p>
+              <strong>Configure sua empresa</strong>
+              <p>Cadastre seus produtos, usuários e as informações do seu negócio.</p>
             </div>
             <div>
               <span>03</span>
-              <strong>Cadastre produtos e comece a vender</strong>
-              <p>PDV, estoque, caixa e financeiro no mesmo fluxo.</p>
+              <strong>Comece a vender</strong>
+              <p>Use o PDV, acompanhe seu estoque, controle o caixa e organize o financeiro em um só lugar.</p>
             </div>
           </div>
         </div>
@@ -382,20 +370,10 @@ export default function Home() {
               Organize vendas, estoque, caixa e gestão em um só lugar, com estrutura para acompanhar o crescimento do seu comércio.
             </p>
             <div className="pricing-price-v2">
-              <sup>R$</sup>
-              <strong>79,99</strong>
+              <span className="price-unit"><sup>R$</sup><strong>79,99</strong></span>
               <span>/ mês</span>
             </div>
-            <a
-              href={whatsappHref}
-              target={whatsappNumber ? "_blank" : undefined}
-              rel={whatsappNumber ? "noreferrer" : undefined}
-              className="button primary pricing-cta"
-              data-track="cta_whatsapp_click" data-position="preco"
-            >
-              Quero contratar <ArrowRight size={18} />
-            </a>
-            <Link href="/cadastro?mode=subscribe" className="button secondary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora</Link>
+            <Link href="/cadastro?mode=subscribe" className="button primary pricing-checkout-v2" data-track="checkout_click" data-position="preco">Assinar agora <ArrowRight size={18} /></Link>
             <Link className="pricing-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="preco">Teste grátis por 7 dias</Link>
           </div>
 
@@ -407,10 +385,8 @@ export default function Home() {
               <li><Check size={18} /> Caixa e financeiro</li>
               <li><Check size={18} /> Clientes e fornecedores</li>
               <li><Check size={18} /> Usuários e permissões</li>
-              <li><Check size={18} /> Acesso pelo navegador</li>
               {GUARANTEES.map((item) => <li key={item}><Check size={18} /> {item}</li>)}
             </ul>
-            {TRIAL_DAYS ? <p className="pricing-guarantee-note-v2">Teste de {TRIAL_DAYS} dias sob confirmação da equipe.</p> : null}
           </div>
         </div>
         <div className="pricing-examples-v2" aria-label="Exemplos de preço por quantidade de lojas">
@@ -425,7 +401,7 @@ export default function Home() {
       <section className="faq-section-v2" id="perguntas">
         <div className="section-heading-v2">
           <span className="section-kicker">PERGUNTAS FREQUENTES</span>
-          <h2>Resposta direta antes de começar.</h2>
+          <h2>Perguntas frequentes</h2>
         </div>
         <div className="faq-list-v2">
           {FAQS.map(([question, answer]) => (
@@ -435,7 +411,6 @@ export default function Home() {
             </details>
           ))}
         </div>
-        {SHOW_LAUNCH_PROGRAM ? <p className="launch-program-v2">Programa de lançamento: acompanhamento direto da equipe nos primeiros clientes.</p> : null}
       </section>
 
       <section className="contact-section-v2" id="contato">
@@ -444,7 +419,7 @@ export default function Home() {
             <span className="section-kicker">PRONTO PARA COMEÇAR?</span>
             <h2>Pronto para colocar seu comércio no controle?</h2>
             <p>
-              Comece por R$ 79,99/mês. Fale com a Kumo para conhecer o sistema e criar o acesso da sua empresa.
+              Comece por R$ 79,99/mês e organize a operação do seu comércio em um só sistema.
             </p>
             <Link className="contact-trial-link-v2" href="/cadastro" data-track="trial_request_click" data-position="rodape">Teste grátis por 7 dias</Link>
           </div>

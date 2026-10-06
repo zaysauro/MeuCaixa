@@ -97,7 +97,9 @@
 .hero-offer-copy span{font-size:12px;color:#748078;max-width:220px}
 .hero-actions-v2{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
 .hero-actions-v2 .button{display:inline-flex;align-items:center;gap:8px}
-.hero-cta{padding:14px 18px}
+.hero-cta{padding:14px 18px;animation:hero-cta-pulse 3.8s ease-in-out infinite}
+@keyframes hero-cta-pulse{0%,100%{box-shadow:0 8px 22px rgba(22,128,60,.16)}50%{box-shadow:0 10px 30px rgba(22,128,60,.34)}}
+@media(prefers-reduced-motion:reduce){.hero-cta{animation:none}}
 .hero-secondary{background:#fff;border:1px solid #dce3df}
 .hero-trust{display:flex;gap:18px;flex-wrap:wrap;margin-top:19px;color:#69756e;font-size:11px;font-weight:650}
 .hero-trust span{display:inline-flex;align-items:center;gap:5px}.hero-trust svg{color:#16803c}
@@ -992,6 +994,9 @@ select.field{appearance:auto}
 .signup-card>p{margin-top:10px;font-size:13px;line-height:1.55}
 .signup-form{display:grid;gap:14px;margin-top:28px}
 .signup-form label{gap:7px;color:#344139;font-size:12px}
+.signup-form .check-row{display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.signup-form .check-row input{flex:0 0 auto;margin:2px 0 0}
+.signup-form .check-row a{color:#126b35;font-weight:700}
 .signup-form .field{height:46px;border-radius:10px;border-color:#d7dfda;background:#fbfcfb;padding:0 13px}
 .signup-form .field::placeholder{color:#a0aaa4}
 .signup-form .field:focus{background:#fff}
@@ -1001,4 +1006,5 @@ select.field{appearance:auto}
 .signup-login a{color:#126b35;font-weight:800}
 @media(max-width:850px){.signup-page{padding:0;background:#fff;place-items:stretch}.signup-shell{min-height:100vh;grid-template-columns:1fr;border:0;border-radius:0;box-shadow:none}.signup-intro{padding:26px 28px 30px}.signup-brand{margin-top:22px}.signup-copy{padding:42px 0 28px}.signup-copy h1{font-size:44px;max-width:620px}.signup-benefits{grid-template-columns:1fr 1fr}.signup-security{display:none}.signup-form-side{padding:40px 28px 55px}.signup-card{max-width:520px}}
 @media(max-width:560px){.signup-intro{padding:22px 20px 26px}.signup-brand{margin-top:18px}.signup-brand img{width:78px;height:36px}.signup-copy{padding:32px 0 23px}.signup-copy h1{font-size:37px}.signup-copy p{font-size:14px}.signup-benefits{grid-template-columns:1fr;gap:8px;margin-bottom:5px}.signup-form-side{padding:32px 20px 44px;place-items:start center}.signup-card h2{font-size:28px}.signup-form{margin-top:23px}.signup-form .field{height:45px}}
+.pricing-price-v2 .price-unit{display:inline-flex;align-items:flex-start;gap:3px;margin:0;font-size:inherit;color:inherit}
 .password-field{display:grid;gap:7px}.password-input-wrap{position:relative;display:block}.password-input-wrap input{padding-right:46px!important}.password-visibility{position:absolute;top:50%;right:8px;width:34px;height:34px;display:grid;place-items:center;transform:translateY(-50%);border:0;border-radius:7px;background:transparent;color:#667085;cursor:pointer}.password-visibility:hover{background:#eef1f3;color:#16803c}.password-input-wrap input[aria-invalid="true"]{border-color:#b42318!important;box-shadow:0 0 0 3px rgba(180,35,24,.1)!important}.password-mismatch{color:#a61b1b;font-size:12px;font-weight:600}.login-forgot,.login-links{color:#16803c;font-size:13px;text-align:center}.login-forgot:hover,.login-links a:hover{text-decoration:underline}
