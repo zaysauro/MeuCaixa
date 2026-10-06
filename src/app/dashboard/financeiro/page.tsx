@@ -127,11 +127,12 @@ export default function FinanceiroPage(){
 
   async function createEntry(e:FormEvent<HTMLFormElement>){
     e.preventDefault();if(savingEntry)return;setSavingEntry(true);setError("");
+    const form=e.currentTarget;
     try {
-      const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
+      const f=new FormData(form);const type=String(f.get("entry_type"));
       const amount=parseBRLMoneyInput(String(f.get("amount")));if(amount===null||amount<=0){setError("Informe um valor válido maior que zero.");return;}
       const {error:e2}=await supabase.rpc("finance_create_entry",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:amount,p_due_date:String(f.get("due_date"))||String(f.get("competence_date"))||today(),p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_origin_type:"manual",p_origin_id:null,p_competence_date:String(f.get("competence_date"))||String(f.get("due_date"))||today()});
-      if(e2){setError(e2.message);return;}setMsg("Lançamento criado.");e.currentTarget.reset();setShowEntry(false);await load();
+      if(e2){setError(e2.message);return;}await load();form.reset();setShowEntry(false);setMsg("Lançamento criado.");
     } catch (error) { setError(error instanceof Error ? error.message : "Não foi possível salvar o lançamento."); }
     finally { setSavingEntry(false); }
   }
@@ -161,37 +162,37 @@ export default function FinanceiroPage(){
   }
 
   async function createAccount(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSavingAccount(true);setError("");const f=new FormData(e.currentTarget);
+    e.preventDefault();setSavingAccount(true);setError("");const form=e.currentTarget;const f=new FormData(form);
     const openingRaw=String(f.get("opening_balance")||"");const opening=openingRaw.trim()?parseBRLMoneyInput(openingRaw):0;if(opening===null||opening<0){setError("O saldo inicial informado é inválido.");setSavingAccount(false);return;}
     const {error:e2}=await supabase.rpc("finance_create_account",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_opening_balance:opening,p_opening_balance_date:String(f.get("opening_balance_date"))||today()});
-    if(e2)setError(e2.message);else{setMsg("Conta financeira criada.");e.currentTarget.reset();await load();}setSavingAccount(false);
+    if(e2)setError(e2.message);else{await load();form.reset();setMsg("Conta financeira criada.");}setSavingAccount(false);
   }
 
   async function createCategory(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSavingCategory(true);setError("");const f=new FormData(e.currentTarget);
+    e.preventDefault();setSavingCategory(true);setError("");const form=e.currentTarget;const f=new FormData(form);
     const {error:e2}=await supabase.rpc("finance_create_category",{p_organization_id:org,p_name:String(f.get("name")),p_kind:String(f.get("kind")),p_statement_group:null});
     if(e2)setError(e2.message);else{
       const {data:newCats}=await supabase.from("finance_categories").select("id,name,kind,statement_group").eq("organization_id",org).eq("active",true).order("name");
-      setCategories((newCats||[]) as Category[]);setMsg("Categoria criada.");setShowNewCategory(false);e.currentTarget.reset();
+      setCategories((newCats||[]) as Category[]);form.reset();setMsg("Categoria criada.");setShowNewCategory(false);
     }setSavingCategory(false);
   }
 
   async function createRecurring(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSavingRecurring(true);setError("");const f=new FormData(e.currentTarget);const type=String(f.get("entry_type"));
+    e.preventDefault();setSavingRecurring(true);setError("");const form=e.currentTarget;const f=new FormData(form);const type=String(f.get("entry_type"));
     const amount=parseBRLMoneyInput(String(f.get("amount")));if(amount===null||amount<=0){setError("Informe um valor válido maior que zero.");setSavingRecurring(false);return;}
     const {error:e2}=await supabase.rpc("finance_create_recurring",{p_organization_id:org,p_branch_id:String(f.get("branch_id"))||null,p_entry_type:type,p_description:String(f.get("description")),p_amount:amount,p_frequency:String(f.get("frequency")),p_next_due_date:String(f.get("next_due_date")),p_category_id:String(f.get("category_id"))||null,p_supplier_id:String(f.get("supplier_id"))||null,p_customer_id:String(f.get("customer_id"))||null,p_create_first:true});
-    if(e2)setError(e2.message);else{setMsg("Recorrência criada e primeira conta gerada.");setShowRecurring(false);e.currentTarget.reset();await load();}setSavingRecurring(false);
+    if(e2)setError(e2.message);else{await load();form.reset();setShowRecurring(false);setMsg("Recorrência criada e primeira conta gerada.");}setSavingRecurring(false);
   }
 
   async function createSupplier(e:FormEvent<HTMLFormElement>){
-    e.preventDefault();setSavingSupplier(true);setError("");const f=new FormData(e.currentTarget);
+    e.preventDefault();setSavingSupplier(true);setError("");const form=e.currentTarget;const f=new FormData(form);
     const {data,error:e2}=await supabase.rpc("finance_create_supplier",{p_organization_id:org,p_name:String(f.get("name")),p_document:String(f.get("document"))||null,p_phone:String(f.get("phone"))||null,p_email:String(f.get("email"))||null});
     if(e2)setError(e2.message);else{
       const newSupplier={id:String(data),name:String(f.get("name")),document:String(f.get("document"))||null,phone:String(f.get("phone"))||null,email:String(f.get("email"))||null};
       setSuppliers(prev=>[...prev.filter(x=>x.id!==newSupplier.id),newSupplier].sort((a,b)=>a.name.localeCompare(b.name)));
       setMsg("Fornecedor cadastrado.");
       if(supplierTarget==="entry")setSelectedSupplier(String(data));else setRecurringSupplier(String(data));
-      setShowNewSupplier(false);e.currentTarget.reset();
+      form.reset();setShowNewSupplier(false);
     }setSavingSupplier(false);
   }
 
