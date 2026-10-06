@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
 import { hasValidBillingAccess } from "@/lib/billing/access";
 import { CancelSubscriptionButton } from "@/components/billing/CancelSubscriptionButton";
+import { Mail, MessageCircle } from "lucide-react";
+import { emailLink, whatsappLink } from "@/lib/marketing/contact";
 
 const brl = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const dateBR = (value?: string | null) => value ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value)) : "—";
@@ -16,6 +18,8 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
 
   const { data: billing } = await supabase.rpc("get_my_billing_status");
   const current = billing?.[0];
+  const { data: access } = await supabase.rpc("get_my_company_access");
+  const accessState = access?.[0];
   const organizationId = org[0].organization_id;
 
   const { data: entitlement } = organizationId
@@ -28,6 +32,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
 
   const status = String(current?.status || "base");
   const hasAccess = hasValidBillingAccess(current);
+  const accessGranted = accessState?.has_access === true || hasAccess;
   if (params.autocheckout === "1" && hasAccess) redirect("/dashboard");
   const statusLabels: Record<string, string> = {
     base: "Acesso cadastrado",
@@ -66,10 +71,44 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
 
   const checkoutLabel = ["past_due", "grace_period", "suspended"].includes(status) ? "Regularizar pagamento" : status === "pending" ? "Continuar pagamento" : "Assinar agora";
   const showCheckout = status !== "active";
+  const blockedMessage = !accessGranted ? ({
+    trial_expired: {
+      title: "Seu período de teste terminou",
+      text: "Seu teste gratuito chegou ao fim. Assine o MeuCaixa para continuar acessando sua empresa.",
+    },
+    payment_overdue: {
+      title: "Pagamento pendente",
+      text: "Ainda não identificamos a regularização do pagamento da sua assinatura.",
+    },
+    entitlement_invalid: {
+      title: "Acesso temporariamente suspenso",
+      text: "Não identificamos uma assinatura ou período de teste válido para esta empresa.",
+    },
+    entitlement_missing: {
+      title: "Acesso temporariamente suspenso",
+      text: "Esta empresa ainda não possui um período de acesso ativo.",
+    },
+    subscription_expired: {
+      title: "Assinatura expirada",
+      text: "A assinatura desta empresa não está mais ativa. Regularize o acesso para continuar usando o MeuCaixa.",
+    },
+  } as Record<string, { title: string; text: string }>)[String(accessState?.access_reason || status)] || {
+    title: "Acesso temporariamente suspenso",
+    text: "Não identificamos um período de acesso ativo para esta empresa.",
+  } : null;
+  const supportMessage = "Olá! Preciso de ajuda para regularizar o acesso da minha empresa no MeuCaixa.";
 
   return (
     <div className="page">
       <div className="page-header"><div><span className="eyebrow">CONFIGURAÇÕES</span><h1>Upgrade</h1><p>Gerencie o período experimental e a assinatura do MeuCaixa.</p></div></div>
+      {blockedMessage && <div className="billing-blocked-alert" role="alert">
+        <div><span className="eyebrow">ACESSO DA EMPRESA</span><h2>{blockedMessage.title}</h2><p>{blockedMessage.text}</p><p>Se você já realizou o pagamento ou está com dificuldades para regularizar o acesso, fale com nosso suporte.</p></div>
+        <div className="billing-blocked-actions">
+          {billingEnabled && showCheckout && !canceling && <BillingCheckoutButton label={checkoutLabel === "Assinar agora" ? "Regularizar assinatura" : checkoutLabel} />}
+          <a className="button secondary" href={whatsappLink(supportMessage)} target="_blank" rel="noreferrer"><MessageCircle size={16} /> Falar com o suporte</a>
+          <a className="button secondary" href={emailLink(supportMessage)}><Mail size={16} /> Por e-mail</a>
+        </div>
+      </div>}
       <div className="panel">
         <h2>Plano atual</h2>
         <p>{descriptions[status] || "Não foi possível identificar o estado atual da assinatura."}</p>

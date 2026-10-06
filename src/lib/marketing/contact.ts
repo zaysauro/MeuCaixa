@@ -1,13 +1,16 @@
 const digitsOnly = (value: string | undefined) => value?.replace(/\D/g, "") ?? "";
 
+const DEFAULT_WHATSAPP_NUMBER = "5541997084653";
+const DEFAULT_CONTACT_EMAIL = "kumosoftwares@gmail.com";
+
 export const CONTACT_MESSAGES = {
   hire: "Olá! Quero contratar o MeuCaixa a partir de R$ 79,99/mês.",
   trial: "Olá! Ainda estou na dúvida e quero solicitar um teste grátis do MeuCaixa.",
 } as const;
 
 export const marketingContact = {
-  whatsappNumber: digitsOnly(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER),
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() ?? "",
+  whatsappNumber: digitsOnly(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER) || DEFAULT_WHATSAPP_NUMBER,
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || DEFAULT_CONTACT_EMAIL,
 };
 
 export function whatsappLink(message: string) {

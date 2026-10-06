@@ -917,11 +917,20 @@ select.field{appearance:auto}
 /* Mobile dashboard shell: keep mobile markup out of the desktop layout. */
 .mobile-dashboard-header,.mobile-dashboard-drawer,.mobile-nav-backdrop{display:none}
 
+.billing-blocked-alert{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px;padding:20px 22px;border:1px solid rgba(180,35,24,.28);border-radius:16px;background:#fff8f7;color:#17191c}
+.billing-blocked-alert h2{margin:5px 0 7px;color:#8f1d16;font-size:20px}
+.billing-blocked-alert p{color:#7a3a35;font-size:14px}
+.billing-blocked-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:9px;min-width:280px}
+.billing-blocked-actions .billing-action{display:inline-flex}
+.billing-blocked-actions .button{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+
 /* Keep the desktop sidebar intact and use a touch drawer below 900px. */
 @media (max-width:900px) {
   .app-shell { display:block; width:100%; max-width:100%; min-width:0; }
   .sidebar { display:none; }
   .main-content { width:100%; max-width:100%; min-width:0; margin:0; }
+  .billing-blocked-alert { display:grid; gap:16px; }
+  .billing-blocked-actions { min-width:0; justify-content:flex-start; }
   .mobile-dashboard-header { display:flex; position:sticky; top:0; z-index:110; min-height:64px; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; background:#111714; color:#fff; border-bottom:1px solid #29342e; padding-top:calc(10px + env(safe-area-inset-top)); }
   .mobile-dashboard-brand { display:flex; align-items:center; gap:9px; min-width:0; color:#fff; font-weight:800; }
   .mobile-dashboard-brand img { width:43px; height:28px; object-fit:contain; filter:brightness(0) invert(1); }
