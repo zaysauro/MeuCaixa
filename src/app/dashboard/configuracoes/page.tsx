@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Building2, FileText, Mail, MessageCircle, ShieldCheck, Users } from "lucide-react";
+import { Building2, FileText, Mail, MessageCircle, ShieldCheck } from "lucide-react";
 import { roleHasPermission, roleLabel } from "@/lib/rbac";
 
 const items = [
-  {
-    href: "/dashboard/configuracoes/usuarios",
-    title: "Usuários e acessos",
-    description: "Convide funcionários, defina funções, filiais e status de acesso.",
-    icon: Users,
-    permission: "users.view",
-  },
   {
     href: "/dashboard/configuracoes/comprovante",
     title: "Comprovante",
