@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import PasswordField from "@/components/PasswordField";
+import { hasValidBillingAccess, sanitizeLoginNext } from "@/lib/billing/access";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -85,9 +86,10 @@ function LoginForm() {
         }
       }
 
-      const destination = metadata.signup_mode === "subscribe" && !next
-        ? "/dashboard/configuracoes/upgrade?autocheckout=1"
-        : next?.startsWith("/") ? next : "/dashboard";
+      const { data: billing } = await supabase.rpc("get_my_billing_status");
+      const hasAccess = hasValidBillingAccess(billing?.[0]);
+      const destination = sanitizeLoginNext(next, hasAccess);
+      console.info("login access decision", { hasAccess, billingStatus: billing?.[0]?.status ?? "missing" });
       window.location.assign(destination);
     } catch (error) {
       setMessage(

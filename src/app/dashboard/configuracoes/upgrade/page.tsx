@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BillingCheckoutButton } from "@/components/billing/BillingCheckoutButton";
+import { hasValidBillingAccess } from "@/lib/billing/access";
 
 const brl = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const dateBR = (value?: string | null) => value ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value)) : "—";
@@ -25,6 +26,8 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
     : { data: null };
 
   const status = String(current?.status || "base");
+  const hasAccess = hasValidBillingAccess(current);
+  if (params.autocheckout === "1" && hasAccess) redirect("/dashboard");
   const statusLabels: Record<string, string> = {
     base: "Acesso cadastrado",
     trial: "Teste grátis",

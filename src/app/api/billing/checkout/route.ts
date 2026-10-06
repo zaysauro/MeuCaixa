@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { calculateMonthlyPrice, createRecurringCheckout, getAsaasCheckoutUrl } from "@/lib/billing/asaas";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasValidBillingAccess } from "@/lib/billing/access";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -23,7 +24,8 @@ export async function POST(request: Request) {
   if (entitlementError || !entitlement) {
     return NextResponse.json({ error: "Status de cobrança indisponível." }, { status: 500 });
   }
-  if (entitlement.status === "active" && entitlement.payment_confirmed) {
+  if (hasValidBillingAccess(entitlement)) {
+    console.info("checkout skipped: organization already has access", { organizationId: current.organization_id, status: entitlement.status });
     return NextResponse.json({ error: "Esta assinatura já está ativa." }, { status: 409 });
   }
   if (entitlement.status === "pending" && entitlement.asaas_checkout_id) {
