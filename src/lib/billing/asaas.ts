@@ -53,9 +53,7 @@ export function createRecurringCheckout(input: {
   successUrl: string;
   cancelUrl: string;
   expiredUrl: string;
-  customerData?: { name?: string | null; email?: string | null; cpfCnpj?: string | null };
 }) {
-  const customerData = Object.fromEntries(Object.entries(input.customerData ?? {}).filter(([, value]) => Boolean(value)));
   return asaasRequest<AsaasCheckout>("/checkouts", {
     method: "POST",
     body: JSON.stringify({
@@ -75,7 +73,6 @@ export function createRecurringCheckout(input: {
         quantity: 1,
         value: input.value,
       }],
-      ...(Object.keys(customerData).length ? { customerData } : {}),
       subscription: {
         cycle: "MONTHLY",
         nextDueDate: new Date(Date.now() + 86_400_000).toISOString().replace("T", " ").slice(0, 19),

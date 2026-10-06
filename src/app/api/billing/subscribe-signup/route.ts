@@ -67,7 +67,6 @@ export async function POST(request: Request) {
       successUrl: `${siteUrl}/login?payment=success`,
       cancelUrl: `${siteUrl}/cadastro?mode=subscribe&checkout=cancelled`,
       expiredUrl: `${siteUrl}/cadastro?mode=subscribe&checkout=expired`,
-      customerData: { name: String(metadata.full_name || company), email },
     });
     const { error: entitlementError } = await admin.from("organization_entitlements").update({ asaas_checkout_id: checkout.id, status: "pending", payment_confirmed: false }).eq("organization_id", organizationId);
     if (entitlementError) return NextResponse.json({ error: "Não foi possível salvar o checkout." }, { status: 500 });

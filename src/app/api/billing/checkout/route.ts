@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
   const { data: organization } = await admin
     .from("organizations")
-    .select("name,legal_name,document,email,base_monthly_price,additional_branch_price")
+    .select("base_monthly_price,additional_branch_price")
     .eq("id", current.organization_id)
     .single();
   if (!organization) return NextResponse.json({ error: "Empresa não encontrada." }, { status: 404 });
@@ -57,11 +57,6 @@ export async function POST(request: Request) {
       successUrl: `${siteUrl}/dashboard/configuracoes/upgrade?checkout=success`,
       cancelUrl: `${siteUrl}/dashboard/configuracoes/upgrade?checkout=cancelled`,
       expiredUrl: `${siteUrl}/dashboard/configuracoes/upgrade?checkout=expired`,
-      customerData: {
-        name: organization.legal_name || organization.name,
-        email: organization.email || user.email,
-        cpfCnpj: organization.document,
-      },
     });
 
     const checkoutUrl = getAsaasCheckoutUrl(checkout);
