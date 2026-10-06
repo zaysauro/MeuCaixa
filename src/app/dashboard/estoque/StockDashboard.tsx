@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
+import { ContextHelp } from "@/components/ContextHelp";
 
 type Branch={branch_id:string;branch_name:string;branch_code:string|null;is_headquarters:boolean;active:boolean;role:string};
 type Product={id:string;name:string;sku:string|null;barcode?:string|null;unit:string;cost_price:number;sale_price:number;minimum_stock:number};
@@ -93,7 +94,7 @@ export default function StockDashboard(){
 
  return <div className="page stock-module">
   <div className="page-header">
-   <div><span className="eyebrow">OPERAÇÃO</span><h1>Estoque</h1><p>Kardex, entradas, saídas, inventário e transferências entre filiais.</p></div>
+   <div><span className="eyebrow">OPERAÇÃO</span><h1>Estoque</h1><p>Kardex, entradas, saídas, inventário e transferências entre filiais.</p></div><ContextHelp title="Controle de estoque" description="Entrada, saída e inventário atualizam o saldo da filial e mantêm o histórico de movimentos. O Kardex mostra a origem de cada alteração." />
    <select value={branchId} onChange={e=>setBranchId(e.target.value)} className="stock-branch-select">{branches.map(b=><option key={b.branch_id} value={b.branch_id}>{b.branch_name}{b.is_headquarters?" · Matriz":""}</option>)}</select>
   </div>
 

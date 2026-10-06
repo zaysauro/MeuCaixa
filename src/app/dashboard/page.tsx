@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StockAlertBanner from "@/components/StockAlertBanner";
+import { ContextHelp } from "@/components/ContextHelp";
 
 const money = (v: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -78,6 +79,8 @@ export default async function DashboardPage({
               : "Visão consolidada de todas as unidades da empresa."}
           </p>
         </div>
+
+        <ContextHelp title="Visão geral" description="Acompanhe vendas, margem, caixa e alertas de estoque da empresa ou da filial selecionada. Use o seletor de unidade para comparar operações sem misturar os dados." />
 
         {canSwitch && <div className="branch-switcher">
           <a

@@ -7,6 +7,7 @@ import { closeCashRegister, getCashHistory } from "@/lib/cash/closing";
 import { getCurrentCash, openCashRegister } from "@/lib/cash/cash";
 import { getCashMovements, registerCashMovement } from "@/lib/cash/movements";
 import type { CashHistoryItem, CashMovement, CashSummary } from "@/lib/cash/types";
+import { ContextHelp } from "@/components/ContextHelp";
 
 const money = (value: number) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dateTime = (value: string | null) => value ? new Date(value).toLocaleString("pt-BR") : "—";
@@ -55,7 +56,7 @@ export default function CaixaPage() {
   function close() { if (!summary) return; return run(async () => { await closeCashRegister(summary.registerId, Number(counted.replace(",", ".")), observation); setCounted(""); setObservation(""); }, "Caixa fechado com sucesso."); }
   if (loading) return <div className="page"><div className="report-loading"><RefreshCw size={18} /> Carregando caixa...</div></div>;
   return <div className="page">
-    <div className="page-header"><div><span className="eyebrow">OPERAÇÃO</span><h1>Caixa</h1><p>Abra, acompanhe e feche o caixa da unidade {branch?.branch_name}.</p></div><button className="button secondary" onClick={() => void load()} disabled={busy}><RefreshCw size={15} /> Atualizar</button></div>
+    <div className="page-header"><div><span className="eyebrow">OPERAÇÃO</span><h1>Caixa</h1><p>Abra, acompanhe e feche o caixa da unidade {branch?.branch_name}.</p></div><div className="actions"><ContextHelp title="Operação de caixa" description="Abra o caixa com o saldo inicial, registre entradas e saídas e feche conferindo o valor contado. O histórico preserva cada fechamento para consulta."/><button className="button secondary" onClick={() => void load()} disabled={busy}><RefreshCw size={15} /> Atualizar</button></div></div>
     {error && <div className="error">{error}</div>}{message && <div className="success">{message}</div>}
     {!summary ? <div className="panel"><h2><WalletCards size={19} /> Abrir caixa</h2><p>Informe o dinheiro disponível no início do expediente.</p><div className="inline-form"><input className="field" type="number" min="0" step=".01" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="Saldo inicial" /><button className="button primary" onClick={() => void open()} disabled={busy}>Abrir caixa</button></div></div> : <>
       <div className="stats-row"><div className="stat-card"><small>Status</small><strong>Aberto</strong></div><div className="stat-card"><small>Vendas em dinheiro</small><strong>{money(summary.cashSales)}</strong></div><div className="stat-card"><small>Entradas</small><strong>{money(summary.cashEntries)}</strong></div><div className="stat-card"><small>Saídas</small><strong>{money(summary.cashWithdrawals)}</strong></div><div className="stat-card"><small>Saldo esperado</small><strong>{money(summary.expectedBalance)}</strong></div></div>

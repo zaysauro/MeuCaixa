@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { filtersToQuery, getReportRange, getTodayInput } from "@/lib/reports/filters";
 import { loadReportBranches, loadReports, loadSalesExport } from "@/lib/reports/api";
 import type { BranchOption, ReportFilters, ReportPeriod, ReportView } from "@/lib/reports/types";
+import { ContextHelp } from "@/components/ContextHelp";
 
 const money = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
@@ -463,6 +464,7 @@ export default function ReportsDashboard() {
           <p>Vendas, produtos, caixa, filiais e financeiro em uma única visão operacional.</p>
         </div>
         <div className="report-actions">
+          <ContextHelp title="Relatórios" description="Filtre o período, filial e visão para acompanhar vendas, produtos, caixa e financeiro. Os dados respeitam as filiais que seu perfil pode acessar." />
           <button className="button secondary" onClick={exportCurrent} disabled={!data || exporting}><Download size={15} /> {exporting ? "Exportando..." : "CSV"}</button>
           <button className="button secondary" onClick={() => window.print()}><Printer size={15} /> Imprimir / PDF</button>
           <button className="button secondary" onClick={() => window.location.reload()}><RefreshCw size={15} /> Atualizar</button>

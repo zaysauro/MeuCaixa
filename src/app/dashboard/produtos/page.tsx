@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import Link from "next/link";
 import { Upload } from "lucide-react";
+import { ContextHelp } from "@/components/ContextHelp";
 
 type Product = {
   id: string;
@@ -288,7 +289,7 @@ export default function ProductsPage() {
             unidades corretas.
           </p>
         </div>
-        <Link className="button secondary" href="/dashboard/produtos/importar"><Upload size={15} /> Importar CSV</Link>
+        <div className="actions"><ContextHelp title="Catálogo de produtos" description="Cadastre preço, custo, unidade e código de barras. O estoque é controlado por filial; a importação CSV permite criar ou atualizar vários produtos de uma vez."/><Link className="button secondary" href="/dashboard/produtos/importar"><Upload size={15} /> Importar CSV</Link></div>
       </div>
 
       <div className="panel">

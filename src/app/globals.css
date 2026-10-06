@@ -441,6 +441,16 @@ select.field{appearance:auto}
   .pos-completed h1{font-size:34px}
 }
 
+/* Shared dashboard shell: keep the sidebar frame fixed while only its navigation scrolls. */
+.sidebar{height:100vh;height:100dvh;overflow:hidden}
+.sidebar nav{flex:1;min-height:0;overflow-y:auto;align-content:start}
+.sidebar-tools,.sidebar-footer{flex-shrink:0}
+.context-help-trigger{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3df;background:#fff;color:#526057;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.context-help-trigger:hover{border-color:#16803c;color:#16803c}
+.context-help-backdrop{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;background:rgba(17,23,20,.48)}
+.context-help-dialog{width:min(460px,100%);background:#fff;border:1px solid #dfe6e1;border-radius:14px;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
+.context-help-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}.context-help-header h2{margin:5px 0 0}.context-help-dialog p{font-size:14px}.context-help-dialog .modal-actions{justify-content:flex-end;margin-top:20px}
+
 .pos-seller-button{width:100%;display:block;text-align:left;border:1px solid #2c3831;background:#18201b;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-size:12px}
 .pos-seller-button:hover{border-color:#4dba76}
 
