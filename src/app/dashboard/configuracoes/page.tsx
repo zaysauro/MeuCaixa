@@ -7,8 +7,8 @@ import { roleHasPermission, roleLabel } from "@/lib/rbac";
 const items = [
   {
     href: "/dashboard/configuracoes/usuarios",
-    title: "Usuários e acessos",
-    description: "Convide funcionários, defina funções, filiais e status de acesso.",
+    title: "Funcionários",
+    description: "Cadastre operadores e identifique quem realizou cada operação de caixa.",
     icon: Users,
     permission: "users.view",
   },

@@ -4,7 +4,8 @@ import type { CashSummary } from "./types";
 
 export async function openCashRegister(
   branchId: string,
-  openingBalance = 0
+  openingBalance = 0,
+  employeeId?: string | null
 ): Promise<string> {
   const normalized = Math.round(Math.max(Number(openingBalance), 0) * 100) / 100;
 
@@ -17,6 +18,7 @@ export async function openCashRegister(
   const { data, error } = await supabase.rpc("open_cash_register", {
     p_branch_id: branchId,
     p_opening_balance: normalized,
+    p_operator_user_id: employeeId || null,
   });
 
   if (error) throw new Error(mapCashError(error.message));
@@ -30,7 +32,7 @@ export async function getCurrentCash(
 ): Promise<CashSummary | null> {
   const supabase = createClient();
 
-  const { data, error } = await supabase.rpc("get_cash_current_summary", {
+  const { data, error } = await supabase.rpc("get_cash_current_summary_with_employee", {
     p_branch_id: branchId,
   });
 
@@ -46,6 +48,9 @@ export async function getCurrentCash(
     terminalNumber: Number(row.terminal_number),
     terminalName: row.terminal_name ? String(row.terminal_name) : null,
     openedBy: row.opened_by ? String(row.opened_by) : null,
+    employeeId: row.employee_id ? String(row.employee_id) : null,
+    employeeName: row.employee_name ? String(row.employee_name) : null,
+    employeeTitle: row.employee_title ? String(row.employee_title) : null,
     openedAt: String(row.opened_at),
     openingBalance: Number(row.opening_balance ?? 0),
     cashSales: Number(row.cash_sales ?? 0),

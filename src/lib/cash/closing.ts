@@ -43,7 +43,7 @@ export async function getCashHistory(params?: {
 }): Promise<CashHistoryItem[]> {
   const supabase = createClient();
 
-  const { data, error } = await supabase.rpc("get_cash_register_history", {
+  const { data, error } = await supabase.rpc("get_cash_register_history_with_employee", {
     p_branch_id: params?.branchId ?? null,
     p_status: params?.status ?? null,
     p_start_date: params?.startDate ?? null,

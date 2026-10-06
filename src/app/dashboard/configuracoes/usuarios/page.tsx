@@ -1,23 +1,69 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MailPlus, RefreshCw, UserPlus, Users } from "lucide-react";
+import { Pencil, Power, RefreshCw, UserPlus, Users } from "lucide-react";
 import { ContextHelp } from "@/components/ContextHelp";
 import { createClient } from "@/lib/supabase/client";
-import { roleLabel } from "@/lib/rbac";
+import { createEmployee, listEmployees, setEmployeeActive, updateEmployee, type Employee } from "@/lib/employees";
 
 type Branch = { branch_id: string; branch_name: string };
-type Member = { user_id: string; full_name: string; email: string; role: string; active: boolean; branch_access_mode: string; branch_names: string[]; last_access: string | null };
-type Invite = { id: string; email: string; full_name: string; role: string; branch_access_mode: string; status: string; expires_at: string; branch_names: string[] };
+type FormState = { name: string; title: string; email: string; phone: string; branchId: string };
+const emptyForm: FormState = { name: "", title: "Caixa", email: "", phone: "", branchId: "" };
 
-export default function UsuariosPage() {
-  const supabase = createClient(); const [organizationId, setOrganizationId] = useState(""); const [branches, setBranches] = useState<Branch[]>([]); const [members, setMembers] = useState<Member[]>([]); const [invites, setInvites] = useState<Invite[]>([]); const [showInvite, setShowInvite] = useState(false); const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [role, setRole] = useState("operator"); const [access, setAccess] = useState("restricted"); const [branchIds, setBranchIds] = useState<string[]>([]); const [message, setMessage] = useState(""); const [busy, setBusy] = useState("");
-  async function load() { const { data: org } = await supabase.rpc("get_my_organization"); const id = org?.[0]?.organization_id; if (!id) return; setOrganizationId(id); const [b, m, i] = await Promise.all([supabase.rpc("get_my_branches"), supabase.rpc("team_list_members", { p_organization_id: id }), supabase.rpc("team_list_invites", { p_organization_id: id })]); if (b.data) setBranches(b.data); if (m.data) setMembers(m.data); if (i.data) setInvites(i.data); if (b.error || m.error || i.error) setMessage((b.error || m.error || i.error)?.message || "Não foi possível carregar a equipe."); }
+export default function FuncionariosPage() {
+  const supabase = createClient();
+  const [organizationId, setOrganizationId] = useState("");
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [editing, setEditing] = useState<Employee | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState("");
+
+  async function load() {
+    setError("");
+    const { data: org, error: orgError } = await supabase.rpc("get_my_organization");
+    const id = org?.[0]?.organization_id;
+    if (orgError || !id) { setError(orgError?.message || "Empresa não configurada."); return; }
+    setOrganizationId(id);
+    try {
+      const [items, branchResult] = await Promise.all([listEmployees(id), supabase.rpc("get_my_branches")]);
+      setEmployees(items);
+      if (!branchResult.error) setBranches((branchResult.data ?? []) as Branch[]);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Não foi possível carregar os funcionários."); }
+  }
+
   useEffect(() => { void load(); }, []);
-  async function invite(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); setBusy("invite"); setMessage(""); const response = await fetch("/api/team/invite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId, email, fullName: name, role, branchAccessMode: access, branchIds }) }); const body = await response.json(); if (!response.ok) setMessage(body.error || "Não foi possível enviar o convite."); else { setMessage(body.existingUser ? "Este usuário já possui conta. Ele deve entrar no MeuCaixa e aceitar o convite em /convite." : "Convite enviado."); setName(""); setEmail(""); setShowInvite(false); await load(); } setBusy(""); }
-  async function cancelInvite(id: string) { setBusy(id); const { error } = await supabase.rpc("team_cancel_invite", { p_invite_id: id }); if (error) setMessage(error.message); else await load(); setBusy(""); }
-  async function resendInvite(invite: Invite) { setBusy(invite.id); const response = await fetch("/api/team/resend", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteId: invite.id }) }); if (!response.ok) setMessage((await response.json()).error || "Não foi possível reenviar o convite."); else { const body = await response.json(); setMessage(body.existingUser ? "Este usuário já possui conta. Ele deve entrar no MeuCaixa e aceitar o convite em /convite." : "Convite reenviado."); } setBusy(""); }
-  async function toggleMember(member: Member) { setBusy(member.user_id); const { error } = await supabase.rpc("team_set_member_active", { p_organization_id: organizationId, p_user_id: member.user_id, p_active: !member.active }); if (error) setMessage(error.message); else await load(); setBusy(""); }
-  const activeCount = members.filter(member => member.active).length;
-  return <div className="page users-page"><div className="page-header users-header"><div><span className="eyebrow">ACESSO DA EMPRESA</span><h1>Equipe</h1><p>Gerencie quem pode acessar esta empresa e quais unidades cada pessoa pode utilizar.</p></div><div className="actions"><ContextHelp title="Sua equipe" description="Adicione os funcionários que utilizam o MeuCaixa e defina o que cada pessoa pode acessar. Assim, cada usuário entra com seu próprio acesso e vê apenas as áreas e unidades permitidas."/><button className="button primary" onClick={() => setShowInvite(true)}><UserPlus size={16}/> Convidar usuário</button></div></div>{message && <div className={message.includes("enviado") || message.includes("reenviado") ? "success" : "error"}>{message}</div>}<div className="panel"><div className="users-table-heading"><div><h2>{activeCount} usuário(s) ativo(s)</h2><p>{invites.filter(invite => invite.status === "pending").length} convite(s) pendente(s)</p></div><button className="button secondary" onClick={() => void load()}><RefreshCw size={15}/> Atualizar</button></div><div className="table-wrap"><table className="users-table"><thead><tr><th>Usuário</th><th>Função</th><th>Unidades</th><th>Status</th><th>Último acesso</th><th/></tr></thead><tbody>{members.map(member => <tr key={member.user_id}><td><strong>{member.full_name}</strong><small>{member.email}</small></td><td>{roleLabel(member.role)}</td><td>{member.branch_access_mode === "all" ? "Todas" : member.branch_names.join(", ") || "Sem unidade"}</td><td>{member.active ? "Ativo" : "Desativado"}</td><td>{member.last_access ? new Date(member.last_access).toLocaleDateString("pt-BR") : "Nunca acessou"}</td><td><button className="button small" disabled={busy === member.user_id} onClick={() => void toggleMember(member)}>{member.active ? "Desativar" : "Reativar"}</button></td></tr>)}{invites.filter(invite => invite.status === "pending").map(invite => <tr key={invite.id}><td><strong>{invite.full_name}</strong><small>{invite.email}</small></td><td>{roleLabel(invite.role)}</td><td>{invite.branch_access_mode === "all" ? "Todas" : invite.branch_names.join(", ")}</td><td>Convite pendente</td><td>Até {new Date(invite.expires_at).toLocaleDateString("pt-BR")}</td><td><button className="button small" disabled={busy === invite.id} onClick={() => void resendInvite(invite)}>Reenviar</button> <button className="button small danger-button" disabled={busy === invite.id} onClick={() => void cancelInvite(invite.id)}>Cancelar</button></td></tr>)}</tbody></table>{!members.length && !invites.length && <div className="users-empty"><Users size={27}/><h3>Nenhum usuário cadastrado</h3><p>Convide sua equipe para que cada pessoa tenha um acesso individual e seguro.</p></div>}</div></div>{showInvite && <div className="modal-backdrop" role="dialog" aria-modal="true"><form className="users-modal" onSubmit={invite}><div className="users-modal-header"><div><span className="eyebrow">NOVO ACESSO</span><h2>Convidar usuário</h2></div><button type="button" className="icon-button" onClick={() => setShowInvite(false)}>×</button></div><div className="users-form-grid"><label>Nome<input className="field" value={name} onChange={event => setName(event.target.value)} required/></label><label>E-mail individual<input className="field" type="email" value={email} onChange={event => setEmail(event.target.value)} required/></label><label>Função<select className="field" value={role} onChange={event => setRole(event.target.value)}><option value="operator">Operador</option><option value="manager">Gerente</option><option value="admin">Administrador</option></select></label><label>Acesso<select className="field" value={access} onChange={event => setAccess(event.target.value)}><option value="restricted">Unidades selecionadas</option><option value="all">Todas as unidades</option></select></label></div>{access === "restricted" && <fieldset className="users-branch-options"><legend>Unidades permitidas</legend>{branches.map(branch => <label key={branch.branch_id}><input type="checkbox" checked={branchIds.includes(branch.branch_id)} onChange={event => setBranchIds(current => event.target.checked ? [...current, branch.branch_id] : current.filter(id => id !== branch.branch_id))}/>{branch.branch_name}</label>)}</fieldset>}<div className="users-modal-note"><MailPlus size={16}/><span>O convite será enviado para o e-mail informado e abrirá no domínio público do MeuCaixa.</span></div><div className="users-modal-actions"><button type="button" className="button secondary" onClick={() => setShowInvite(false)}>Cancelar</button><button className="button primary" disabled={busy === "invite"}><MailPlus size={16}/> {busy === "invite" ? "Enviando..." : "Enviar convite"}</button></div></form></div>}</div>;
+  function openCreate() { setEditing(null); setForm(emptyForm); setMessage(""); setError(""); setShowForm(true); }
+  function openEdit(employee: Employee) { setEditing(employee); setForm({ name: employee.name, title: employee.title, email: employee.email ?? "", phone: employee.phone ?? "", branchId: employee.branch_id ?? "" }); setMessage(""); setError(""); setShowForm(true); }
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (!organizationId) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      if (editing) await updateEmployee({ id: editing.id, name: form.name, title: form.title, email: form.email, phone: form.phone, branchId: form.branchId || null });
+      else await createEmployee({ organizationId, name: form.name, title: form.title, email: form.email, phone: form.phone, branchId: form.branchId || null });
+      setShowForm(false); setForm(emptyForm); setMessage(editing ? "Funcionário atualizado." : "Funcionário cadastrado."); await load();
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Não foi possível salvar o funcionário."); }
+    finally { setBusy(false); }
+  }
+
+  async function toggle(employee: Employee) {
+    if (employee.active && !window.confirm(`Deseja desativar ${employee.name}? O histórico será preservado.`)) return;
+    setBusyId(employee.id); setError(""); setMessage("");
+    try { await setEmployeeActive(employee.id, !employee.active); setMessage(employee.active ? "Funcionário desativado." : "Funcionário reativado."); await load(); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "Não foi possível atualizar o funcionário."); }
+    finally { setBusyId(""); }
+  }
+
+  return <div className="page users-page">
+    <div className="page-header users-header"><div><span className="eyebrow">OPERAÇÃO</span><h1>Funcionários</h1><p>Cadastre os funcionários da sua empresa para identificar quem está operando o caixa e registrar responsáveis pelas operações.</p></div><div className="actions"><ContextHelp title="Sobre funcionários" description="O cadastro é operacional e não cria login, senha, convite ou conta no Supabase Auth."/><button className="button primary" onClick={openCreate}><UserPlus size={16}/> Adicionar funcionário</button></div></div>
+    {error && <div className="error">{error}</div>}{message && <div className="success">{message}</div>}
+    <section className="panel"><div className="users-table-heading"><div><h2>{employees.filter((employee) => employee.active).length} funcionário(s) ativo(s)</h2><p>O cadastro é opcional e não cria novos acessos ao sistema.</p></div><button className="button secondary" onClick={() => void load()}><RefreshCw size={15}/> Atualizar</button></div><div className="table-wrap"><table className="users-table"><thead><tr><th>Funcionário</th><th>Função</th><th>Filial</th><th>Status</th><th>Ações</th></tr></thead><tbody>{employees.map((employee) => <tr key={employee.id}><td><strong>{employee.name}</strong><small>{[employee.email, employee.phone].filter(Boolean).join(" · ") || "Sem contato informado"}</small></td><td>{employee.title}</td><td>{employee.branch_name || "Todas"}</td><td>{employee.active ? "Ativo" : "Desativado"}</td><td><button className="button small" onClick={() => openEdit(employee)}><Pencil size={14}/> Editar</button> <button className="button small" disabled={busyId === employee.id} onClick={() => void toggle(employee)}><Power size={14}/> {employee.active ? "Desativar" : "Reativar"}</button></td></tr>)}</tbody></table>{!employees.length && <div className="users-empty"><Users size={27}/><h3>Nenhum funcionário cadastrado</h3><p>Adicione funcionários somente para identificar os operadores das sessões de caixa.</p></div>}</div></section>
+    <section className="support-card"><div><span className="eyebrow">SOBRE ESTA ÁREA</span><h2>Cadastro operacional</h2><p>O funcionário não recebe e-mail, senha ou convite. Ao abrir uma sessão de caixa, você poderá selecionar um funcionário ativo como operador.</p></div></section>
+    {showForm && <div className="modal-backdrop" role="dialog" aria-modal="true"><form className="users-modal" onSubmit={save}><div className="users-modal-header"><div><span className="eyebrow">{editing ? "EDITAR FUNCIONÁRIO" : "NOVO FUNCIONÁRIO"}</span><h2>{editing ? "Editar funcionário" : "Adicionar funcionário"}</h2></div><button type="button" className="icon-button" onClick={() => setShowForm(false)}>×</button></div><div className="users-form-grid"><label>Nome *<input className="field" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required autoFocus/></label><label>Função<select className="field" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })}><option>Caixa</option><option>Gerente</option><option>Vendedor</option><option>Estoquista</option><option>Atendente</option><option>Outro</option></select></label><label>E-mail opcional<input className="field" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })}/></label><label>Telefone opcional<input className="field" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })}/></label><label>Filial opcional<select className="field" value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Todas as filiais</option>{branches.map((branch) => <option key={branch.branch_id} value={branch.branch_id}>{branch.branch_name}</option>)}</select></label></div><div className="users-modal-actions"><button type="button" className="button secondary" onClick={() => setShowForm(false)}>Cancelar</button><button className="button primary" disabled={busy}>{busy ? "Salvando..." : editing ? "Salvar alterações" : "Cadastrar funcionário"}</button></div></form></div>}
+  </div>;
 }
