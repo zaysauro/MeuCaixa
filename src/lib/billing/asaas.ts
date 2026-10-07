@@ -85,7 +85,76 @@ export function createRecurringCheckout(input: {
   });
 }
 
-export function calculateMonthlyPrice(branchCount: number, basePrice = 79.99, additionalBranchPrice = 50) {
-  const additional = Math.max(0, Math.trunc(branchCount) - 1);
-  return Number((basePrice + additional * additionalBranchPrice).toFixed(2));
+export type AsaasPaymentMethod = "CREDIT_CARD" | "PIX" | "BOLETO";
+export type AsaasCustomer = { id: string };
+export type AsaasSubscription = { id: string; customer?: string; billingType?: string; nextDueDate?: string };
+export type AsaasPayment = { id: string; status?: string; billingType?: string; invoiceUrl?: string; bankSlipUrl?: string; dueDate?: string; value?: number; subscription?: string; customer?: string };
+
+export function calculateMonthlyPriceCents(
+  contractedBranches: number,
+  basePrice = 79.99,
+  additionalBranchPrice = 50,
+  includedBranches = 1,
+) {
+  const toCents = (value: number) => Math.round(value * 100);
+  const additional = Math.max(0, Math.trunc(contractedBranches) - Math.trunc(includedBranches));
+  return toCents(basePrice) + additional * toCents(additionalBranchPrice);
+}
+
+export function calculateMonthlyPrice(branchCount: number, basePrice = 79.99, additionalBranchPrice = 50, includedBranches = 1) {
+  return calculateMonthlyPriceCents(branchCount, basePrice, additionalBranchPrice, includedBranches) / 100;
+}
+
+export function normalizeDocument(value: string) { return value.replace(/\D/g, ""); }
+
+export function isValidCpfCnpj(value: string) {
+  const document = normalizeDocument(value);
+  if (/^(\d)\1+$/.test(document)) return false;
+  if (document.length === 11) {
+    const check = (length: number) => {
+      let sum = 0;
+      for (let index = 0; index < length; index += 1) sum += Number(document[index]) * (length + 1 - index);
+      const digit = (sum * 10) % 11;
+      return digit === 10 ? 0 : digit;
+    };
+    return check(9) === Number(document[9]) && check(10) === Number(document[10]);
+  }
+  if (document.length === 14) {
+    const check = (length: number) => {
+      const weights = length === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+      const sum = weights.reduce((total, weight, index) => total + Number(document[index]) * weight, 0);
+      const remainder = sum % 11;
+      return remainder < 2 ? 0 : 11 - remainder;
+    };
+    return check(12) === Number(document[12]) && check(13) === Number(document[13]);
+  }
+  return false;
+}
+
+export function createAsaasCustomer(input: { name: string; email: string; cpfCnpj: string; externalReference: string }) {
+  return asaasRequest<AsaasCustomer>("/customers", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function findAsaasCustomer(externalReference: string) {
+  return asaasRequest<{ data?: AsaasCustomer[] }>(`/customers?externalReference=${encodeURIComponent(externalReference)}&limit=1`);
+}
+
+export function createDirectSubscription(input: { customer: string; externalReference: string; value: number; billingType: Exclude<AsaasPaymentMethod, "CREDIT_CARD"> }) {
+  return asaasRequest<AsaasSubscription>("/subscriptions", { method: "POST", body: JSON.stringify({
+    customer: input.customer, billingType: input.billingType, value: input.value, cycle: "MONTHLY",
+    nextDueDate: new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
+    description: "Assinatura mensal MeuCaixa", externalReference: input.externalReference,
+  }) });
+}
+
+export function listSubscriptionPayments(subscriptionId: string) {
+  return asaasRequest<{ data?: AsaasPayment[] }>(`/subscriptions/${encodeURIComponent(subscriptionId)}/payments?limit=1`);
+}
+
+export function getPixQrCode(paymentId: string) {
+  return asaasRequest<{ encodedImage?: string; payload?: string; expirationDate?: string }>(`/payments/${encodeURIComponent(paymentId)}/pixQrCode`);
+}
+
+export function findAsaasSubscription(externalReference: string) {
+  return asaasRequest<{ data?: AsaasSubscription[] }>(`/subscriptions?externalReference=${encodeURIComponent(externalReference)}&limit=1`);
 }

@@ -27,7 +27,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
     : { data: null };
 
   const { data: organization } = organizationId
-    ? await supabase.from("organizations").select("base_monthly_price,additional_branch_price,included_branches").eq("id", organizationId).maybeSingle()
+    ? await supabase.from("organizations").select("base_monthly_price,additional_branch_price,included_branches,billing_branch_count").eq("id", organizationId).maybeSingle()
     : { data: null };
 
   const status = String(current?.status || "base");
@@ -104,7 +104,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
       {blockedMessage && <div className="billing-blocked-alert" role="alert">
         <div><span className="eyebrow">ACESSO DA EMPRESA</span><h2>{blockedMessage.title}</h2><p>{blockedMessage.text}</p><p>Se você já realizou o pagamento ou está com dificuldades para regularizar o acesso, fale com nosso suporte.</p></div>
         <div className="billing-blocked-actions">
-          {billingEnabled && showCheckout && !canceling && <BillingCheckoutButton label={checkoutLabel === "Assinar agora" ? "Regularizar assinatura" : checkoutLabel} />}
+          {billingEnabled && showCheckout && !canceling && <BillingCheckoutButton label={checkoutLabel === "Assinar agora" ? "Regularizar assinatura" : checkoutLabel} initialBranches={Number(organization?.billing_branch_count ?? organization?.included_branches ?? 1)} basePrice={basePrice} branchPrice={branchPrice} />}
           <a className="button secondary" href={whatsappLink(supportMessage)} target="_blank" rel="noreferrer"><MessageCircle size={16} /> Falar com o suporte</a>
           <a className="button secondary" href={emailLink(supportMessage)}><Mail size={16} /> Por e-mail</a>
         </div>
@@ -124,7 +124,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
         <p>Plano base de {brl(basePrice)}/mês para a matriz. Cada filial adicional custa {brl(branchPrice)}/mês. Pagamento por Pix, boleto ou cartão processado pelo Asaas.</p>
         {status === "trial" && <p style={{ marginTop: 10 }}>Você pode assinar antes do fim do teste. Assim que o pagamento for confirmado, o status muda para <strong>Assinatura ativa</strong>.</p>}
         {canceling && <div className="success" style={{ marginTop: 16 }}>A renovação foi cancelada. Seu acesso permanece até {dateBR(current?.access_until || current?.current_period_end)}.</div>}
-        {status === "active" && !canceling ? <div style={{ marginTop: 16 }}><div className="success">Pagamento confirmado. Nenhuma ação necessária.</div><div style={{ marginTop: 14 }}><CancelSubscriptionButton /></div></div> : billingEnabled && showCheckout && !canceling ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} autoStart={params.autocheckout === "1"} /></div> : !canceling && <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
+        {status === "active" && !canceling ? <div style={{ marginTop: 16 }}><div className="success">Pagamento confirmado. Nenhuma ação necessária.</div><div style={{ marginTop: 14 }}><CancelSubscriptionButton /></div></div> : billingEnabled && showCheckout && !canceling ? <div style={{ marginTop: 18 }}><BillingCheckoutButton label={checkoutLabel} autoStart={params.autocheckout === "1"} initialBranches={Number(organization?.billing_branch_count ?? organization?.included_branches ?? 1)} basePrice={basePrice} branchPrice={branchPrice} /></div> : !canceling && <p style={{ marginTop: 16 }}>Cobrança online temporariamente indisponível. Fale com a equipe Kumo.</p>}
       </div>
       <p className="sub" style={{ marginTop: 14 }}><a href="https://sistemakumo.com.br/termos" target="_blank" rel="noreferrer">Termos de Uso</a> · <a href="https://sistemakumo.com.br/privacidade" target="_blank" rel="noreferrer">Política de Privacidade</a></p>
       <Link href="/dashboard/configuracoes">Voltar para configurações</Link>
