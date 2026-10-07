@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Check, LockKeyhole, Store } from "lucide-react";
@@ -17,6 +17,9 @@ function CadastroForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accepted, setAccepted] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"CREDIT_CARD" | "PIX" | "BOLETO">("CREDIT_CARD");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const signupAttempt = useRef(crypto.randomUUID());
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,16 +65,17 @@ function CadastroForm() {
       const checkoutResponse = await fetch("/api/billing/subscribe-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: data.user.id, email, company, acceptedTerms: true }),
+        body: JSON.stringify({ userId: data.user.id, email, company, acceptedTerms: true, paymentMethod, cpfCnpj, idempotencyKey: signupAttempt.current }),
       });
       const checkoutBody = await checkoutResponse.json().catch(() => ({}));
-      if (!checkoutResponse.ok || !checkoutBody.url) {
+      if (!checkoutResponse.ok || (!checkoutBody.url && !checkoutBody.checkoutUrl && !checkoutBody.invoiceUrl && !checkoutBody.pix)) {
         setError(checkoutBody.error || "Não foi possível abrir o pagamento agora.");
         setLoading(false);
         return;
       }
 
-      window.location.assign(checkoutBody.url);
+      if (checkoutBody.url || checkoutBody.checkoutUrl || checkoutBody.invoiceUrl) window.location.assign(checkoutBody.url || checkoutBody.checkoutUrl || checkoutBody.invoiceUrl);
+      else setMessage(`Pix gerado. Copie o código de pagamento: ${checkoutBody.pix?.payload || ""}`);
       return;
     }
 
@@ -126,6 +130,12 @@ function CadastroForm() {
               <label>E-mail<input className="field" name="email" type="email" autoComplete="email" placeholder="voce@empresa.com.br" required /></label>
               <PasswordField label="Senha" value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password" minLength={8} required />
               <PasswordField label="Confirmar senha" value={confirmPassword} confirmValue={password} onChange={event => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} required />
+              {subscribe && <>
+                <div className="billing-methods" role="group" aria-label="Forma de pagamento">
+                  {([["CREDIT_CARD", "Cartão de crédito", "Cobrança automática mensal"], ["PIX", "Pix", "Pagamento mensal via Pix"], ["BOLETO", "Boleto bancário", "Pagamento mensal via boleto"]] as const).map(([value, title, description]) => <button key={value} type="button" className={paymentMethod === value ? "button secondary active" : "button secondary"} onClick={() => { setPaymentMethod(value); signupAttempt.current = crypto.randomUUID(); }}><strong>{title}</strong><small>{description}</small></button>)}
+                </div>
+                {paymentMethod !== "CREDIT_CARD" && <input className="field" value={cpfCnpj} onChange={event => setCpfCnpj(event.target.value)} placeholder="CPF ou CNPJ" inputMode="numeric" aria-label="CPF ou CNPJ" />}
+              </>}
               <label className="check-row"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} /> Li e aceito os <a href="https://sistemakumo.com.br/termos" target="_blank" rel="noreferrer">Termos de Uso</a> e a <a href="https://sistemakumo.com.br/privacidade" target="_blank" rel="noreferrer">Política de Privacidade</a>.</label>
               <button className="button primary signup-submit" disabled={loading} type="submit">{loading ? "Criando sua conta..." : subscribe ? "Criar conta e continuar" : "Começar meus 7 dias grátis"}</button>
             </form>
