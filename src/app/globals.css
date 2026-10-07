@@ -923,6 +923,11 @@ select.field{appearance:auto}
 .mobile-dashboard-header,.mobile-dashboard-drawer,.mobile-nav-backdrop{display:none}
 
 .billing-blocked-alert{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px;padding:20px 22px;border:1px solid rgba(180,35,24,.28);border-radius:16px;background:#fff8f7;color:#17191c}
+.company-settings-card{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px}
+.company-settings-card .company-name-form{grid-column:2;display:grid;gap:10px;max-width:520px}
+.company-name-form label{display:grid;gap:7px}
+.company-name-form small{color:#667085;font-size:12px}
+.company-name-form .success,.company-name-form .error{margin:0}
 .billing-blocked-alert h2{margin:5px 0 7px;color:#8f1d16;font-size:20px}
 .billing-blocked-alert p{color:#7a3a35;font-size:14px}
 .billing-blocked-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:9px;min-width:280px}

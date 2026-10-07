@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Building2, FileText, Mail, MessageCircle, ShieldCheck } from "lucide-react";
 import { roleHasPermission, roleLabel } from "@/lib/rbac";
+import CompanyNameForm from "./CompanyNameForm";
 
 const items = [
   {
@@ -62,14 +63,14 @@ export default async function ConfiguracoesPage() {
           </div>
         </section>
 
-        <div className="settings-hub-card settings-hub-card-muted">
+        <section className="settings-hub-card company-settings-card">
           <span className="settings-hub-icon"><Building2 size={21} /></span>
           <span>
             <strong>Empresa</strong>
-            <small>Dados comerciais e identidade da empresa ficarão aqui.</small>
+            <small>Este nome identifica sua empresa dentro do MeuCaixa e nos documentos e comprovantes compatíveis.</small>
           </span>
-          <span className="settings-coming-soon">{roleLabel(role)}</span>
-        </div>
+          <CompanyNameForm organizationId={String(org[0].organization_id)} initialName={String(org[0].organization_name || "")} canEdit={role === "owner" || role === "admin"} />
+        </section>
       </div>
     </div>
   );
