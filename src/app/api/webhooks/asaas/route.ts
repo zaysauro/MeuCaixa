@@ -26,6 +26,29 @@ export async function POST(request: Request) {
   if (!payload?.id || !payload.event) return NextResponse.json({ error: "Invalid event" }, { status: 400 });
 
   const admin = createAdminClient();
+
+  // A mesma conta Asaas pode entregar eventos de outros produtos Kumo a este
+  // endpoint. Um externalReference UUID só pertence ao MeuCaixa quando existe
+  // na tabela local de organizations. Eventos estrangeiros devem ser
+  // reconhecidos com HTTP 200 para não penalizar/reter a fila do Asaas.
+  const externalReference =
+    payload.payment?.externalReference ||
+    payload.subscription?.externalReference ||
+    payload.checkout?.externalReference ||
+    null;
+
+  if (externalReference) {
+    const { data: localOrganization, error: organizationLookupError } = await admin
+      .from("organizations")
+      .select("id")
+      .eq("id", externalReference)
+      .maybeSingle();
+
+    if (!organizationLookupError && !localOrganization) {
+      return NextResponse.json({ received: true, ignored: true });
+    }
+  }
+
   const { error: eventError } = await admin.from("billing_events").insert({
     provider_event_id: payload.id,
     event_type: payload.event,
