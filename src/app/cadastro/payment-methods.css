@@ -1,0 +1,100 @@
+/* Payment method selector — cadastro/assinatura */
+.billing-methods{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  width:100%;
+}
+.billing-method{
+  width:100%;
+  min-width:0;
+  min-height:68px;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  align-items:center;
+  column-gap:12px;
+  padding:13px 15px;
+  border:1px solid #dbe3de;
+  border-radius:12px;
+  background:#fbfcfb;
+  color:#18221c;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.billing-method:hover{
+  border-color:#9fc8ad;
+  background:#f7fbf8;
+  transform:translateY(-1px);
+}
+.billing-method:focus-visible{
+  outline:0;
+  border-color:#16803c;
+  box-shadow:0 0 0 3px rgba(22,128,60,.14);
+}
+.billing-method-indicator{
+  width:18px;
+  height:18px;
+  border:1.5px solid #a8b2ac;
+  border-radius:50%;
+  background:#fff;
+  display:grid;
+  place-items:center;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.billing-method-indicator::after{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#16803c;
+  transform:scale(0);
+  transition:transform .16s ease;
+}
+.billing-method-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.billing-method-title{
+  display:block;
+  color:#18221c;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+.billing-method-description{
+  display:block;
+  color:#6d7972;
+  font-size:12px;
+  font-weight:500;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.billing-method.is-selected{
+  border-color:#16803c;
+  background:#f0f8f3;
+  box-shadow:0 0 0 1px rgba(22,128,60,.08);
+}
+.billing-method.is-selected .billing-method-indicator{
+  border-color:#16803c;
+  box-shadow:0 0 0 3px rgba(22,128,60,.10);
+}
+.billing-method.is-selected .billing-method-indicator::after{
+  transform:scale(1);
+}
+.billing-method.is-selected .billing-method-title{
+  color:#126b35;
+}
+@media(max-width:560px){
+  .billing-methods{gap:9px}
+  .billing-method{
+    min-height:64px;
+    padding:12px 13px;
+    column-gap:10px;
+    border-radius:11px;
+  }
+  .billing-method-title{font-size:13px}
+  .billing-method-description{font-size:11px}
+}
