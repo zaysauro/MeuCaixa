@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Check, LockKeyhole, Store } from "lucide-react";
 import PasswordField from "@/components/PasswordField";
 import { getPublicSiteUrl } from "@/lib/site-url";
+import "./payment-methods.css";
 
 function CadastroForm() {
   const searchParams = useSearchParams();
@@ -132,7 +133,7 @@ function CadastroForm() {
               <PasswordField label="Confirmar senha" value={confirmPassword} confirmValue={password} onChange={event => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} required />
               {subscribe && <>
                 <div className="billing-methods" role="group" aria-label="Forma de pagamento">
-                  {([["CREDIT_CARD", "Cartão de crédito", "Cobrança automática mensal"], ["PIX", "Pix", "Pagamento mensal via Pix"], ["BOLETO", "Boleto bancário", "Pagamento mensal via boleto"]] as const).map(([value, title, description]) => <button key={value} type="button" className={paymentMethod === value ? "button secondary active" : "button secondary"} onClick={() => { setPaymentMethod(value); signupAttempt.current = crypto.randomUUID(); }}><strong>{title}</strong><small>{description}</small></button>)}
+                  {([["CREDIT_CARD", "Cartão de crédito", "Cobrança automática mensal"], ["PIX", "Pix", "Pagamento mensal via Pix"], ["BOLETO", "Boleto bancário", "Pagamento mensal via boleto"]] as const).map(([value, title, description]) => <button key={value} type="button" aria-pressed={paymentMethod === value} className={paymentMethod === value ? "billing-method is-selected" : "billing-method"} onClick={() => { setPaymentMethod(value); signupAttempt.current = crypto.randomUUID(); }}><span className="billing-method-indicator" aria-hidden="true" /><span className="billing-method-copy"><strong className="billing-method-title">{title}</strong><small className="billing-method-description">{description}</small></span></button>)}
                 </div>
                 {paymentMethod !== "CREDIT_CARD" && <input className="field" value={cpfCnpj} onChange={event => setCpfCnpj(event.target.value)} placeholder="CPF ou CNPJ" inputMode="numeric" aria-label="CPF ou CNPJ" />}
               </>}
