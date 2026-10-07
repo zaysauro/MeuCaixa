@@ -24,7 +24,7 @@ const steps = [
   {
     icon: CheckCircle2,
     title: "4. Faça suas vendas",
-    text: "No Vendas / PDV, selecione os produtos, confira o total e registre a forma de pagamento.",
+    text: "Em Vendas, selecione os produtos, confira o total e registre a forma de pagamento.",
   },
   {
     icon: Boxes,

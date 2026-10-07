@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/client";
 import type { ReceiptLogType, SaleReceiptData } from "./types";
 
+export { paymentMethodLabel } from "@/lib/presentation/labels";
+
 export async function getSaleReceipt(saleId: string): Promise<SaleReceiptData> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("get_sale_receipt", {
@@ -47,15 +49,4 @@ export function formatReceiptMoney(value: number): string {
     style: "currency",
     currency: "BRL",
   }).format(value);
-}
-
-export function paymentMethodLabel(method: string): string {
-  const labels: Record<string, string> = {
-    cash: "Dinheiro",
-    pix: "PIX",
-    credit_card: "Crédito",
-    debit_card: "Débito",
-    other: "Outro",
-  };
-  return labels[method] ?? method;
 }

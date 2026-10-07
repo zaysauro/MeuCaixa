@@ -19,6 +19,7 @@ import { filtersToQuery, getReportRange, getTodayInput } from "@/lib/reports/fil
 import { loadReportBranches, loadReports, loadSalesExport } from "@/lib/reports/api";
 import type { BranchOption, ReportFilters, ReportPeriod, ReportView } from "@/lib/reports/types";
 import { ContextHelp } from "@/components/ContextHelp";
+import { paymentMethodLabel } from "@/lib/presentation/labels";
 
 const money = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
@@ -28,14 +29,6 @@ const numberBR = (value: number) =>
 
 const percent = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(Number(value) || 0);
-
-const paymentLabels: Record<string, string> = {
-  cash: "Dinheiro",
-  pix: "PIX",
-  debit_card: "Débito",
-  credit_card: "Crédito",
-  other: "Outros",
-};
 
 function variation(current: number, previous: number) {
   if (!previous) return current ? null : 0;
@@ -105,7 +98,7 @@ function SalesTab({ data, compare, page, onPageChange }: { data: any; compare: b
           {data.payment_breakdown.length ? (
             <div className="report-chart">
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={data.payment_breakdown.map((x: any) => ({ ...x, label: paymentLabels[x.method] ?? x.method }))}>
+                <BarChart data={data.payment_breakdown.map((x: any) => ({ ...x, label: paymentMethodLabel(x.method) }))}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="label" />
                   <YAxis tickFormatter={(v) => `R$ ${numberBR(v)}`} />
@@ -278,7 +271,7 @@ function FinanceTab({ data }: { data: any }) {
   const cashBalance = Number(data.cash.income) - Number(data.cash.expense);
   return (
     <>
-      <div className="report-info-banner"><strong>Financeiro administrativo</strong><span>Competência usa o lançamento. Caixa usa a data de pagamento. Vendas do PDV não são duplicadas como receita administrativa.</span></div>
+          <div className="report-info-banner"><strong>Financeiro administrativo</strong><span>Competência usa o lançamento. Controle de Caixa usa a data de pagamento. Vendas não são duplicadas como receita administrativa.</span></div>
       <div className="report-kpi-grid">
         <Kpi label="Receitas · competência" value={money(data.competence.income)} />
         <Kpi label="Despesas · competência" value={money(data.competence.expense)} />

@@ -450,6 +450,11 @@ select.field{appearance:auto}
 .sidebar{height:100vh;height:100dvh;overflow:hidden}
 .sidebar nav{flex:1;min-height:0;overflow-y:auto;align-content:start}
 .sidebar-tools,.sidebar-footer{flex-shrink:0}
+.sidebar nav,.mobile-dashboard-links{scrollbar-width:thin;scrollbar-color:#49c878 transparent}
+.sidebar nav::-webkit-scrollbar,.mobile-dashboard-links::-webkit-scrollbar{width:7px}
+.sidebar nav::-webkit-scrollbar-track,.mobile-dashboard-links::-webkit-scrollbar-track{background:transparent}
+.sidebar nav::-webkit-scrollbar-thumb,.mobile-dashboard-links::-webkit-scrollbar-thumb{background:rgba(73,200,120,.65);border-radius:999px}
+.sidebar nav::-webkit-scrollbar-thumb:hover,.mobile-dashboard-links::-webkit-scrollbar-thumb:hover{background:#49c878}
 .context-help-trigger{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3df;background:#fff;color:#526057;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer}
 .context-help-trigger:hover{border-color:#16803c;color:#16803c}
 .context-help-backdrop{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;background:rgba(17,23,20,.48)}

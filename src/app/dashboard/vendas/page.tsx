@@ -156,7 +156,7 @@ export default function VendasPage() {
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível carregar o PDV.");
+      setError(err instanceof Error ? err.message : "Não foi possível carregar as vendas.");
     } finally {
       setLoading(false);
     }
@@ -485,7 +485,7 @@ export default function VendasPage() {
         <div>
           <span className="eyebrow">PONTO DE VENDA</span>
           <h1>Vendas</h1>
-          <p>PDV rápido para balcão, loja e caixa.</p>
+          <p>Venda rápida para balcão, loja e caixa.</p>
         </div>
         <div className="pos-header-actions">
           <button

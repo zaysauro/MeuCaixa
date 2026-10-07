@@ -23,7 +23,11 @@ export async function POST(request: Request) {
     .eq("organization_id", current.organization_id)
     .single();
   if (entitlementError || !entitlement) {
-    return NextResponse.json({ error: "Status de cobrança indisponível." }, { status: 500 });
+    console.error("billing checkout unavailable: entitlement is missing or invalid", {
+      organizationId: current.organization_id,
+      code: entitlementError?.code,
+    });
+    return NextResponse.json({ error: "Não foi possível iniciar a regularização automática desta assinatura. Fale com o suporte para regularizar o acesso." }, { status: 503 });
   }
   if (hasValidBillingAccess(entitlement)) {
     console.info("checkout skipped: organization already has access", { organizationId: current.organization_id, status: entitlement.status });

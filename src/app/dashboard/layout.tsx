@@ -17,10 +17,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const role = String(org[0].role || "operator");
   const navItems = [
     ["Visão geral", "/dashboard"],
-    ["Vendas / PDV", "/dashboard/vendas"],
+    ["Vendas", "/dashboard/vendas"],
     ["Produtos", "/dashboard/produtos"],
     ["Estoque", "/dashboard/estoque"],
-    ["Caixa", "/dashboard/caixa"],
+    ["Controle de Caixa", "/dashboard/caixa"],
     ["Financeiro", "/dashboard/financeiro"],
     ["Clientes", "/dashboard/clientes"],
     ["Fornecedores", "/dashboard/fornecedores"],
