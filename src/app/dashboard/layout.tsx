@@ -16,14 +16,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const role = String(org[0].role || "operator");
   const navItems = [
-    ["Visão geral", "/dashboard"],
+    ["Visão Geral", "/dashboard"],
     ["Vendas", "/dashboard/vendas"],
+    ["Controle de Caixa", "/dashboard/caixa"],
     ["Produtos", "/dashboard/produtos"],
     ["Estoque", "/dashboard/estoque"],
-    ["Controle de Caixa", "/dashboard/caixa"],
-    ["Financeiro", "/dashboard/financeiro"],
     ["Clientes", "/dashboard/clientes"],
     ["Fornecedores", "/dashboard/fornecedores"],
+    ["Financeiro", "/dashboard/financeiro"],
     ["Relatórios", "/dashboard/relatorios"],
     ["Configurações", "/dashboard/configuracoes"],
     ...((role === "owner" || role === "admin") ? [["Upgrade", "/dashboard/configuracoes/upgrade"] as const] : []),
